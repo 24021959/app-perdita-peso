@@ -15,6 +15,8 @@ import { TONES, type Tone } from "@/lib/sections";
 import VoiceButton from "@/components/VoiceButton";
 import RecipeDetails from "@/components/RecipeDetails";
 import SyncBadge from "@/components/SyncBadge";
+import { useHintDismissed } from "@/lib/hints";
+import { useSyncStatus } from "@/lib/useSync";
 import { parseVoice } from "@/lib/voice";
 import type { Entry, Exam, MenuPlan } from "@/lib/types";
 
@@ -108,9 +110,12 @@ function Oggi() {
   const isToday = today === realToday;
   const [now, setNow] = useState<Date | null>(null);
   const [exams] = useMeta<Exam[]>("exams", []);
+  const sync = useSyncStatus();
+  const [syncHintGone, dismissSyncHint] = useHintDismissed("sync");
   const ws = weekStart(realToday);
   const [plan] = useMeta<MenuPlan | null>(`menu:${ws}`, null);
-  const dayMenu = (plan ?? baseWeek(ws)).days[(new Date().getDay() + 6) % 7];
+  const [dislikes] = useMeta<string[]>("dislikes", []);
+  const dayMenu = (plan ?? baseWeek(ws, dislikes)).days[(new Date().getDay() + 6) % 7];
   const alerts = useMemo(
     () => buildAdvice(entries, settings, exams, realToday).filter((a) => a.level !== "info").slice(0, 2),
     [entries, settings, exams, realToday],
@@ -185,6 +190,31 @@ function Oggi() {
           <p className="text-center text-sm text-peach-ink">Stai modificando un giorno passato.</p>
         )}
       </header>
+
+      {isToday && sync.phase === "out" && !syncHintGone && (
+        <section className="rounded-2xl bg-sky text-sky-ink p-4 space-y-3">
+          <p className="font-semibold">Per ora i dati sono solo su questo telefono</p>
+          <p className="text-sm">
+            Accedi con la tua email per salvarli anche online: li ritrovi su ogni dispositivo e non li perdi se
+            cancelli i dati del browser.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href="/impostazioni/"
+              className="rounded-xl bg-accent text-on-accent py-3 text-center font-semibold"
+            >
+              Accedi
+            </Link>
+            <button
+              type="button"
+              onClick={dismissSyncHint}
+              className="rounded-xl border border-sky-ink/30 bg-card text-foreground py-3"
+            >
+              Non ora
+            </button>
+          </div>
+        </section>
+      )}
 
       {alerts.length > 0 && (
         <Link href="/consigli/" className="block space-y-2">

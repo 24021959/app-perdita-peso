@@ -7,7 +7,7 @@ export default function SyncBadge() {
   const s = useSyncStatus();
   const map = {
     off: { t: "", c: "" },
-    out: { t: "Non collegato online", c: "text-muted" },
+    out: { t: "Accedi per salvare online ›", c: "text-accent font-medium underline" },
     idle: { t: s.pending > 0 ? `Online · ${s.pending} da inviare` : "Salvato online", c: "text-accent" },
     syncing: { t: "Sincronizzo…", c: "text-muted" },
     error: { t: "Errore online", c: "text-rose-ink" },

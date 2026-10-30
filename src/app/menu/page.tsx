@@ -1,21 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import DislikesPanel from "@/components/DislikesPanel";
 import PageBanner from "@/components/PageBanner";
 import RecipeDetails from "@/components/RecipeDetails";
-import { CARB_LIMIT, PROTEIN_TARGET, dayTotals } from "@/lib/recipes";
+import ShoppingList from "@/components/ShoppingList";
 import { addDays, shortDate, todayKey, weekStart } from "@/lib/dates";
 import { TONES, type Tone } from "@/lib/sections";
 import { useMeta } from "@/lib/useMeta";
 import {
   DAY_NAMES,
+  applyDislikes,
   baseWeek,
   breakfastOf,
+  countDisliked,
   generateWeek,
   lunchOf,
-  shoppingList,
   swapMeal,
 } from "@/lib/menu";
+import { CARB_LIMIT, PROTEIN_TARGET, dayTotals } from "@/lib/recipes";
 import type { MenuPlan } from "@/lib/types";
 
 export default function MenuPage() {
@@ -36,21 +39,29 @@ function WeekMenu({
 }) {
   const [saved, savePlan, ready] = useMeta<MenuPlan | null>(`menu:${ws}`, null);
   const [checked, saveChecked] = useMeta<string[]>(`spesa:${ws}`, []);
-  const [showShop, setShowShop] = useState(false);
+  const [dislikes, saveDislikes, dislikesReady] = useMeta<string[]>("dislikes", []);
+  const [openAll, setOpenAll] = useState(false);
 
-  const plan = saved ?? baseWeek(ws);
-  const shop = useMemo(() => shoppingList(plan), [plan]);
+  const plan = saved ?? baseWeek(ws, dislikes);
+  const offending = saved ? countDisliked(saved, dislikes) : 0;
   const todayIdx = (new Date().getDay() + 6) % 7;
 
-  if (!ready) return <p className="text-muted">Carico…</p>;
+  if (!ready || !dislikesReady) return <p className="text-muted">Carico…</p>;
 
-  const toggle = (name: string) =>
-    saveChecked(checked.includes(name) ? checked.filter((x) => x !== name) : [...checked, name]);
+  const toggleChecked = (item: string) =>
+    saveChecked(checked.includes(item) ? checked.filter((x) => x !== item) : [...checked, item]);
+
+  function toggleDislike(item: string) {
+    const next = dislikes.includes(item) ? dislikes.filter((x) => x !== item) : [...dislikes, item];
+    void saveDislikes(next);
+    // la settimana che si sta guardando si aggiorna subito
+    if (saved && next.length && !dislikes.includes(item)) void savePlan(applyDislikes(saved, next));
+  }
 
   return (
     <div className="space-y-5">
       <PageBanner section="menu" title="Menu della settimana">
-        Colazione dopo le 8:00, pranzo entro le 16:00.
+        Colazione dopo le 8:00, pranzo entro le 16:00. Ogni piatto ha la sua ricetta.
       </PageBanner>
 
       <div className="grid grid-cols-2 gap-2">
@@ -77,7 +88,7 @@ function WeekMenu({
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => savePlan(generateWeek(ws))}
+          onClick={() => savePlan(generateWeek(ws, dislikes))}
           className="rounded-xl bg-accent text-on-accent py-3 font-semibold"
         >
           Rigenera il menu
@@ -85,7 +96,7 @@ function WeekMenu({
         <button
           type="button"
           onClick={() => {
-            void savePlan(baseWeek(ws));
+            void savePlan(baseWeek(ws, dislikes));
             void saveChecked([]);
           }}
           className="rounded-xl border border-line bg-card py-3"
@@ -94,13 +105,41 @@ function WeekMenu({
         </button>
       </div>
 
+      <DislikesPanel
+        dislikes={dislikes}
+        onToggle={toggleDislike}
+        onClear={() => void saveDislikes([])}
+      />
+
+      {offending > 0 && saved && (
+        <div className="rounded-2xl bg-butter text-butter-ink p-4 space-y-2">
+          <p>
+            {offending === 1 ? "Un piatto di questa settimana contiene" : `${offending} piatti di questa settimana contengono`}{" "}
+            alimenti che non ti piacciono.
+          </p>
+          <button
+            type="button"
+            onClick={() => void savePlan(applyDislikes(saved, dislikes))}
+            className="rounded-xl bg-accent text-on-accent px-4 py-2 font-semibold"
+          >
+            Sostituisci
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setOpenAll((v) => !v)}
+        className="w-full rounded-xl border border-accent bg-card py-3 font-semibold text-accent"
+      >
+        {openAll ? "Chiudi tutte le ricette" : "📖 Apri tutte le ricette"}
+      </button>
+
       <ul className="space-y-3">
         {plan.days.map((d, i) => (
           <li
-            key={i}
-            className={`rounded-2xl bg-card border p-4 ${
-              isCurrent && i === todayIdx ? "border-accent" : "border-line"
-            }`}
+            key={`${i}-${d.breakfast}-${d.lunch}`}
+            className={`rounded-2xl bg-card border p-4 ${isCurrent && i === todayIdx ? "border-accent" : "border-line"}`}
           >
             <p className="flex items-center gap-2">
               <span className={`rounded-full px-3 py-1 text-sm font-semibold ${TONES[i % TONES.length].chip}`}>
@@ -113,56 +152,23 @@ function WeekMenu({
               label="Colazione"
               recipeId={d.breakfast}
               text={breakfastOf(d.breakfast).name}
-              onSwap={() => savePlan(swapMeal(plan, i, "breakfast"))}
+              openAll={openAll}
+              onSwap={() => savePlan(swapMeal(plan, i, "breakfast", dislikes))}
             />
             <MealRow
               tone={TONES[0]}
               label="Pranzo"
               recipeId={d.lunch}
               text={lunchOf(d.lunch).name}
-              onSwap={() => savePlan(swapMeal(plan, i, "lunch"))}
+              openAll={openAll}
+              onSwap={() => savePlan(swapMeal(plan, i, "lunch", dislikes))}
             />
             <DayTotals ids={[d.breakfast, d.lunch]} />
           </li>
         ))}
       </ul>
 
-      <section className="rounded-2xl bg-butter text-butter-ink p-4">
-        <button
-          type="button"
-          onClick={() => setShowShop((v) => !v)}
-          className="w-full flex items-center justify-between text-left"
-        >
-          <span className="text-lg font-semibold">Lista della spesa</span>
-          <span className="text-accent">{showShop ? "Chiudi" : "Apri"}</span>
-        </button>
-        {showShop && (
-          <>
-            <p className="text-sm text-muted mt-1">
-              Il numero indica in quanti pasti serve l&apos;ingrediente. Per gli insaccati controlla in etichetta che
-              non ci siano zuccheri o destrosio.
-            </p>
-            <ul className="mt-3 divide-y divide-line">
-              {shop.map((it) => (
-                <li key={it.name}>
-                  <label className="flex items-center gap-3 py-3">
-                    <input
-                      type="checkbox"
-                      checked={checked.includes(it.name)}
-                      onChange={() => toggle(it.name)}
-                      className="h-5 w-5 accent-[var(--accent)]"
-                    />
-                    <span className={checked.includes(it.name) ? "line-through text-muted" : ""}>
-                      {it.name}
-                    </span>
-                    <span className="ml-auto text-sm text-muted">×{it.count}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </section>
+      <ShoppingList plan={plan} checked={checked} onToggle={toggleChecked} />
 
       <p className="text-xs text-muted">
         Porzioni indicative: 150-180 g di carne o pesce a pranzo, verdura libera, olio 1-2 cucchiai. Vedi il
@@ -182,12 +188,14 @@ function MealRow({
   text,
   tone,
   recipeId,
+  openAll,
   onSwap,
 }: {
   label: string;
   text: string;
   tone: Tone;
   recipeId: string;
+  openAll: boolean;
   onSwap: () => void;
 }) {
   return (
@@ -206,7 +214,7 @@ function MealRow({
           Cambia
         </button>
       </div>
-      <RecipeDetails id={recipeId} />
+      <RecipeDetails key={`${recipeId}-${openAll}`} id={recipeId} openAll={openAll} />
     </div>
   );
 }
