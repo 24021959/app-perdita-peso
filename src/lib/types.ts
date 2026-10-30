@@ -46,6 +46,13 @@ export type Exam = {
   creat?: number; // creatinina mg/dl
   alt?: number; // U/L
   ast?: number; // U/L
+  ggt?: number; // U/L
+  urea?: number; // azotemia mg/dl
+  uric?: number; // acido urico mg/dl
+  na?: number; // sodio mmol/l
+  k?: number; // potassio mmol/l
+  vitd?: number; // vitamina D (25-OH) ng/ml
+  tsh?: number; // µUI/ml
 };
 
 export type MenuPlan = {

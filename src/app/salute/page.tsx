@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import LineCard from "@/components/Charts";
 import PageBanner from "@/components/PageBanner";
 import { EXAM_FIELDS, type ExamKey } from "@/components/ExamFields";
 import { diffDays, longDate, shortDate, todayKey } from "@/lib/dates";
 import { lastDays } from "@/lib/metrics";
+import { parseExamText } from "@/lib/examOcr";
+import { readImageText, type OcrProgress } from "@/lib/ocr";
 import { useData } from "@/lib/useData";
 import { useMeta } from "@/lib/useMeta";
 import type { Exam } from "@/lib/types";
@@ -115,6 +117,12 @@ function ExamForm({ onSave }: { onSave: (e: Exam) => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(todayKey());
   const [vals, setVals] = useState<Partial<Record<ExamKey, string>>>({});
+  const [busy, setBusy] = useState<OcrProgress | null>(null);
+  const [report, setReport] = useState<{ found: number; missing: string[]; rejected: string[]; text: string } | null>(null);
+  const [error, setError] = useState("");
+  const [showText, setShowText] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
   async function submit() {
     const exam: Exam = { id: `${Date.now()}`, date };
@@ -129,8 +137,43 @@ function ExamForm({ onSave }: { onSave: (e: Exam) => Promise<void> }) {
     if (!any) return;
     await onSave(exam);
     setVals({});
+    setReport(null);
     setOpen(false);
   }
+
+  async function onPhoto(file: File | undefined) {
+    if (!file) return;
+    setError("");
+    setReport(null);
+    setBusy({ stage: "Preparo la foto", pct: 0 });
+    try {
+      const text = await readImageText(file, setBusy);
+      const parsed = parseExamText(text, todayKey());
+      const next: Partial<Record<ExamKey, string>> = {};
+      for (const f of EXAM_FIELDS) {
+        const v = parsed.values[f.key];
+        if (v !== undefined) next[f.key] = String(v).replace(".", ",");
+      }
+      setVals(next);
+      if (parsed.date) setDate(parsed.date);
+      const labelOf = (k: string) => EXAM_FIELDS.find((f) => f.key === k)?.label ?? k;
+      setReport({
+        found: Object.keys(next).length,
+        missing: EXAM_FIELDS.filter((f) => !f.extra && next[f.key] === undefined).map((f) => f.label),
+        rejected: parsed.rejected.map((r) => labelOf(r.key)),
+        text,
+      });
+      if (EXAM_FIELDS.some((f) => f.extra && next[f.key] !== undefined)) setShowExtra(true);
+    } catch {
+      setError("Non sono riuscito a leggere la foto. Riprova con più luce, il foglio dritto e ben inquadrato, oppure scrivi i valori a mano.");
+    } finally {
+      setBusy(null);
+      if (fileRef.current) fileRef.current.value = "";
+      if (galleryRef.current) galleryRef.current.value = "";
+    }
+  }
+
+  const [showExtra, setShowExtra] = useState(false);
 
   if (!open) {
     return (
@@ -143,8 +186,107 @@ function ExamForm({ onSave }: { onSave: (e: Exam) => Promise<void> }) {
       </button>
     );
   }
+  const basic = EXAM_FIELDS.filter((f) => !f.extra);
+  const extra = EXAM_FIELDS.filter((f) => f.extra);
+  const inputs = (list: typeof EXAM_FIELDS) => (
+    <div className="grid grid-cols-2 gap-3">
+      {list.map((f) => (
+        <label key={f.key} className="block">
+          <span className="text-sm text-muted">
+            {f.label} ({f.unit})
+          </span>
+          <input
+            inputMode="decimal"
+            value={vals[f.key] ?? ""}
+            onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })}
+            className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
+          />
+        </label>
+      ))}
+    </div>
+  );
   return (
     <div className="space-y-3">
+      <div className="rounded-2xl bg-sky text-sky-ink p-4 space-y-3">
+        <p className="font-semibold">Compila da una foto</p>
+        <p className="text-sm">
+          Fotografa il foglio degli esami, ben dritto e con buona luce. La lettura avviene nel telefono: la foto non
+          viene inviata a nessuno.
+        </p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          data-testid="exam-camera"
+          onChange={(e) => void onPhoto(e.target.files?.[0])}
+        />
+        <input
+          ref={galleryRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          data-testid="exam-gallery"
+          onChange={(e) => void onPhoto(e.target.files?.[0])}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            disabled={!!busy}
+            onClick={() => fileRef.current?.click()}
+            className="rounded-xl bg-accent text-on-accent py-3 font-semibold disabled:opacity-60"
+          >
+            Scatta foto
+          </button>
+          <button
+            type="button"
+            disabled={!!busy}
+            onClick={() => galleryRef.current?.click()}
+            className="rounded-xl border border-line bg-card text-foreground py-3 font-semibold disabled:opacity-60"
+          >
+            Scegli dalla galleria
+          </button>
+        </div>
+        {busy && (
+          <div role="status" aria-live="polite">
+            <p className="text-sm font-semibold">
+              {busy.stage}
+              {busy.pct > 0 ? ` ${busy.pct}%` : "…"}
+            </p>
+            <div className="mt-1 h-2 rounded-full bg-card overflow-hidden">
+              <div className="h-full bg-accent transition-all" style={{ width: `${Math.max(busy.pct, 4)}%` }} />
+            </div>
+            <p className="mt-1 text-xs">La prima volta può servire qualche istante in più.</p>
+          </div>
+        )}
+        {error && <p className="text-sm font-semibold">{error}</p>}
+      </div>
+
+      {report && (
+        <div className="rounded-2xl bg-butter text-butter-ink p-4 space-y-2" data-testid="exam-report">
+          <p className="font-semibold">
+            {report.found > 0
+              ? `Ho trovato ${report.found} ${report.found === 1 ? "valore" : "valori"}. Controllali con il foglio prima di salvare.`
+              : "Non ho trovato valori in questa foto. Riprova o scrivili a mano."}
+          </p>
+          {report.found > 0 && report.missing.length > 0 && (
+            <p className="text-sm">Non trovati: {report.missing.join(", ")}.</p>
+          )}
+          {report.rejected.length > 0 && (
+            <p className="text-sm">Letti male e lasciati vuoti: {report.rejected.join(", ")}. Scrivili tu.</p>
+          )}
+          <button type="button" onClick={() => setShowText(!showText)} className="text-sm underline">
+            {showText ? "Nascondi il testo letto" : "Vedi il testo letto"}
+          </button>
+          {showText && (
+            <pre className="text-xs whitespace-pre-wrap max-h-48 overflow-auto rounded-lg bg-card text-foreground p-2">
+              {report.text}
+            </pre>
+          )}
+        </div>
+      )}
+
       <label className="block">
         <span className="text-sm text-muted">Data del prelievo</span>
         <input
@@ -155,23 +297,20 @@ function ExamForm({ onSave }: { onSave: (e: Exam) => Promise<void> }) {
           className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
         />
       </label>
-      <div className="grid grid-cols-2 gap-3">
-        {EXAM_FIELDS.map((f) => (
-          <label key={f.key} className="block">
-            <span className="text-sm text-muted">
-              {f.label} ({f.unit})
-            </span>
-            <input
-              inputMode="decimal"
-              value={vals[f.key] ?? ""}
-              onChange={(e) => setVals({ ...vals, [f.key]: e.target.value })}
-              className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
-            />
-          </label>
-        ))}
-      </div>
+      {inputs(basic)}
+      <button type="button" onClick={() => setShowExtra(!showExtra)} className="text-sm underline text-muted">
+        {showExtra ? "Nascondi altri valori" : "Altri valori (acido urico, sodio, potassio, TSH…)"}
+      </button>
+      {showExtra && inputs(extra)}
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-line py-3">
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setReport(null);
+          }}
+          className="rounded-xl border border-line py-3"
+        >
           Annulla
         </button>
         <button type="button" onClick={submit} className="rounded-xl bg-accent text-on-accent py-3 font-semibold">

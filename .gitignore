@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# file della lettura dei referti, copiati alla build da scripts/copy-ocr.mjs
+/public/ocr/
