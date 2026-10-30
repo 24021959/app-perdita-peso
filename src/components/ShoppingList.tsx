@@ -5,6 +5,7 @@ import { GROUP_LABEL, type FoodGroup } from "@/lib/recipes";
 import { shoppingList, shoppingText } from "@/lib/menu";
 import { addDays, shortDate } from "@/lib/dates";
 import { useMeta } from "@/lib/useMeta";
+import { sendShoppingEmail } from "@/lib/sync";
 import { useSyncStatus } from "@/lib/useSync";
 import type { MenuPlan } from "@/lib/types";
 
@@ -23,10 +24,12 @@ export default function ShoppingList({
 }) {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [savedTo, saveTo] = useMeta<string>("shopEmail", "");
   const { email: accountEmail } = useSyncStatus();
   const to = savedTo || accountEmail || "";
   const share = useSyncExternalStore(subscribe, canShare, () => false);
+  const validTo = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to);
 
   const lines = shoppingList(plan);
   const subject = `Lista della spesa, settimana dal ${shortDate(plan.weekStart)} al ${shortDate(addDays(plan.weekStart, 6))}`;
@@ -35,6 +38,24 @@ export default function ShoppingList({
   const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
     text().replace(/\n/g, "\r\n"),
   )}`;
+
+  async function send() {
+    if (!validTo) {
+      setState("error");
+      setMsg("Scrivi un indirizzo email valido.");
+      return;
+    }
+    setState("sending");
+    setMsg("");
+    const r = await sendShoppingEmail(to, subject, text());
+    if (r.ok) {
+      setState("sent");
+      setMsg(`Lista inviata a ${to}. Controlla la posta (e lo spam, la prima volta).`);
+    } else {
+      setState("error");
+      setMsg(r.error);
+    }
+  }
 
   async function doShare() {
     try {
@@ -108,33 +129,46 @@ export default function ShoppingList({
                 onChange={(e) => void saveTo(e.target.value)}
                 className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
               />
+              <span className="mt-1 block text-xs text-muted">
+                {savedTo && validTo
+                  ? "✓ Indirizzo salvato: lo ritrovi la prossima volta, anche sugli altri dispositivi."
+                  : accountEmail && !savedTo
+                    ? "Se non scrivi nulla uso l'email con cui hai fatto l'accesso."
+                    : "Si salva da solo mentre scrivi."}
+              </span>
             </label>
             <div className="grid gap-2">
-              <a
-                href={mailto}
-                onClick={() =>
-                  setMsg("Si apre la tua app di posta con la lista già scritta: controlla il destinatario e premi Invia.")
-                }
-                className="block w-full rounded-xl bg-accent text-on-accent py-4 text-center text-lg font-semibold"
+              <button
+                type="button"
+                onClick={send}
+                disabled={state === "sending"}
+                className="w-full rounded-xl bg-accent text-on-accent py-4 text-lg font-semibold disabled:opacity-60"
               >
-                ✉️ Invia per email
-              </a>
-              <div className={`grid gap-2 ${share ? "grid-cols-2" : "grid-cols-1"}`}>
+                {state === "sending" ? "Invio in corso…" : "✉️ Invia per email"}
+              </button>
+              <div className={`grid gap-2 ${share ? "grid-cols-3" : "grid-cols-2"}`}>
+                <a
+                  href={mailto}
+                  onClick={() => setMsg("Si apre la tua app di posta con la lista già scritta: premi Invia.")}
+                  className="rounded-xl border border-line py-3 text-center text-sm"
+                >
+                  Apri nella posta
+                </a>
                 {share && (
-                  <button type="button" onClick={doShare} className="rounded-xl border border-line py-3">
+                  <button type="button" onClick={doShare} className="rounded-xl border border-line py-3 text-sm">
                     Condividi
                   </button>
                 )}
-                <button type="button" onClick={copy} className="rounded-xl border border-line py-3">
-                  Copia il testo
+                <button type="button" onClick={copy} className="rounded-xl border border-line py-3 text-sm">
+                  Copia
                 </button>
               </div>
             </div>
             <p className="text-xs text-muted">
-              Le voci già spuntate non vengono inviate. L&apos;email si prepara nella tua app di posta: l&apos;app non
-              invia nulla da sola.
+              Le voci già spuntate non vengono inviate. &quot;Invia per email&quot; spedisce la lista direttamente, serve
+              l&apos;accesso online; &quot;Apri nella posta&quot; la prepara invece nella tua app di posta.
             </p>
-            {msg && <p className="text-sm text-accent font-medium">{msg}</p>}
+            {msg && <p className={`text-sm font-medium ${state === "error" ? "text-rose-ink" : "text-accent"}`}>{msg}</p>}
           </div>
         </div>
       )}

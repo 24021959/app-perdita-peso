@@ -262,3 +262,32 @@ export async function signInWithEmail(email: string): Promise<string | null> {
 export async function signOut() {
   await client().auth.signOut();
 }
+
+export type SendResult = { ok: true } | { ok: false; code: string; error: string };
+
+/** Invia la lista della spesa per email, tramite la funzione sul server (Resend). */
+export async function sendShoppingEmail(to: string, subject: string, text: string): Promise<SendResult> {
+  if (!session) {
+    return {
+      ok: false,
+      code: "signed_out",
+      error: "Per inviare l'email devi prima accedere: Impostazioni → Salvataggio online.",
+    };
+  }
+  try {
+    const { error } = await client().functions.invoke("peso-send-shopping-list", { body: { to, subject, text } });
+    if (!error) return { ok: true };
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === "function") {
+      try {
+        const b = (await ctx.json()) as { code?: string; error?: string };
+        return { ok: false, code: b.code ?? "error", error: b.error ?? "Invio non riuscito." };
+      } catch {
+        /* risposta non leggibile */
+      }
+    }
+    return { ok: false, code: "network", error: friendly(error) };
+  } catch (e) {
+    return { ok: false, code: "network", error: friendly(e) };
+  }
+}
