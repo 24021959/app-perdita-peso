@@ -11,6 +11,8 @@ export type Entry = {
   diastolic?: number;
   glucose?: number; // mg/dl
   fastingKept?: boolean;
+  offPlan?: boolean; // giorno fuori regola (cena, evento): non spezza la serie e non genera avvisi
+  offPlanNote?: string;
   notes?: string;
 };
 

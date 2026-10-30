@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import PageBanner from "@/components/PageBanner";
+import RecipeDetails from "@/components/RecipeDetails";
+import { CARB_LIMIT, PROTEIN_TARGET, dayTotals } from "@/lib/recipes";
 import { addDays, shortDate, todayKey, weekStart } from "@/lib/dates";
 import { TONES, type Tone } from "@/lib/sections";
 import { useMeta } from "@/lib/useMeta";
@@ -109,15 +111,18 @@ function WeekMenu({
             <MealRow
               tone={TONES[2]}
               label="Colazione"
+              recipeId={d.breakfast}
               text={breakfastOf(d.breakfast).name}
               onSwap={() => savePlan(swapMeal(plan, i, "breakfast"))}
             />
             <MealRow
               tone={TONES[0]}
               label="Pranzo"
+              recipeId={d.lunch}
               text={lunchOf(d.lunch).name}
               onSwap={() => savePlan(swapMeal(plan, i, "lunch"))}
             />
+            <DayTotals ids={[d.breakfast, d.lunch]} />
           </li>
         ))}
       </ul>
@@ -163,6 +168,11 @@ function WeekMenu({
         Porzioni indicative: 150-180 g di carne o pesce a pranzo, verdura libera, olio 1-2 cucchiai. Vedi il
         documento &quot;menu base&quot; nel Progetto per i dettagli.
       </p>
+      <p className="rounded-2xl bg-butter text-butter-ink p-4 text-sm">
+        I menu base valgono circa 500-800 kcal al giorno, con 50-70 g di proteine. Per un uomo di 67 anni è
+        poco: fallo vedere al medico e, se ti dice di aumentare, porta le porzioni di proteine e di grassi buoni
+        all&apos;obiettivo indicato qui sopra.
+      </p>
     </div>
   );
 }
@@ -171,27 +181,52 @@ function MealRow({
   label,
   text,
   tone,
+  recipeId,
   onSwap,
 }: {
   label: string;
   text: string;
   tone: Tone;
+  recipeId: string;
   onSwap: () => void;
 }) {
   return (
-    <div className={`mt-3 flex items-start gap-3 rounded-xl p-3 ${tone.soft}`}>
-      <div className="flex-1">
-        <p className={`text-xs uppercase tracking-wide ${tone.ink}`}>{label}</p>
-        <p>{text}</p>
+    <div className={`mt-3 rounded-xl p-3 ${tone.soft}`}>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs uppercase tracking-wide ${tone.ink}`}>{label}</p>
+          <p>{text}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onSwap}
+          aria-label={`Cambia ${label.toLowerCase()}`}
+          className="shrink-0 rounded-lg border border-line bg-card px-3 py-2 text-sm text-accent"
+        >
+          Cambia
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onSwap}
-        aria-label={`Cambia ${label.toLowerCase()}`}
-        className="shrink-0 rounded-lg border border-line bg-card px-3 py-2 text-sm text-accent"
-      >
-        Cambia
-      </button>
+      <RecipeDetails id={recipeId} />
+    </div>
+  );
+}
+
+function DayTotals({ ids }: { ids: [string, string] }) {
+  const t = dayTotals(ids[0], ids[1]);
+  const missing = PROTEIN_TARGET - t.protein;
+  return (
+    <div className="mt-3 rounded-xl border border-line px-3 py-2 text-sm">
+      <p>
+        <span className="text-muted">Totale del giorno: </span>
+        <strong>{t.kcal} kcal</strong> · proteine <strong>{t.protein} g</strong> · carboidrati netti{" "}
+        <strong className={t.carbs > CARB_LIMIT ? "text-rose-ink" : ""}>{t.carbs} g</strong>
+      </p>
+      {missing > 0 && (
+        <p className="mt-1 text-xs text-muted">
+          Mancano circa {missing} g di proteine all&apos;obiettivo di {PROTEIN_TARGET} g: ad esempio un uovo in più
+          (6 g) o 50 g di pollo (12 g) in più.
+        </p>
+      )}
     </div>
   );
 }

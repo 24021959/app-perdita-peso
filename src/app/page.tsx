@@ -10,8 +10,10 @@ import { addDays, diffDays, formatDate, todayKey, weekStart } from "@/lib/dates"
 import { buildAdvice } from "@/lib/advice";
 import { baseWeek, breakfastOf, lunchOf } from "@/lib/menu";
 import { avgAt } from "@/lib/metrics";
+import { buildMilestones, recentMilestones } from "@/lib/milestones";
 import { TONES, type Tone } from "@/lib/sections";
 import VoiceButton from "@/components/VoiceButton";
+import RecipeDetails from "@/components/RecipeDetails";
 import SyncBadge from "@/components/SyncBadge";
 import { parseVoice } from "@/lib/voice";
 import type { Entry, Exam, MenuPlan } from "@/lib/types";
@@ -114,6 +116,11 @@ function Oggi() {
     [entries, settings, exams, realToday],
   );
 
+  const fresh = useMemo(
+    () => recentMilestones(buildMilestones(entries, settings, realToday), realToday, 2),
+    [entries, settings, realToday],
+  );
+
   useEffect(() => {
     const tick = () => setNow(new Date());
     const first = setTimeout(tick, 0);
@@ -197,6 +204,13 @@ function Oggi() {
         </Link>
       )}
 
+      {isToday && fresh.length > 0 && (
+        <Link href="/andamento/" className="block rounded-2xl bg-butter text-butter-ink p-3">
+          <p className="text-xs uppercase tracking-wide opacity-80">Traguardo raggiunto</p>
+          <p className="font-medium">{fresh.map((m) => m.title).join(" · ")}</p>
+        </Link>
+      )}
+
       {isToday && (
         <section
           className={`rounded-3xl p-5 text-foreground bg-gradient-to-br ${
@@ -232,10 +246,12 @@ function Oggi() {
           <div className="rounded-xl bg-peach p-3">
             <p className="text-xs text-peach-ink uppercase tracking-wide">Colazione</p>
             <p>{breakfastOf(dayMenu.breakfast).name}</p>
+            <RecipeDetails id={dayMenu.breakfast} />
           </div>
           <div className="rounded-xl bg-mint p-3">
             <p className="text-xs text-mint-ink uppercase tracking-wide">Pranzo</p>
             <p>{lunchOf(dayMenu.lunch).name}</p>
+            <RecipeDetails id={dayMenu.lunch} />
           </div>
         </section>
       )}
@@ -281,10 +297,12 @@ function TodayForm({
     diastolic: str(initial?.diastolic),
     glucose: str(initial?.glucose),
     notes: initial?.notes ?? "",
+    offPlanNote: initial?.offPlanNote ?? "",
   });
   const [energy, setEnergy] = useState(initial?.energy);
   const [hunger, setHunger] = useState(initial?.hunger);
   const [kept, setKept] = useState(initial?.fastingKept);
+  const [offPlan, setOffPlan] = useState(initial?.offPlan ?? false);
   const [saved, setSaved] = useState(false);
   const [heard, setHeard] = useState<{ text: string; understood: string[] } | null>(null);
 
@@ -302,6 +320,7 @@ function TodayForm({
     if (r.values.energy !== undefined) setEnergy(r.values.energy);
     if (r.values.hunger !== undefined) setHunger(r.values.hunger);
     if (r.fastingKept !== undefined) setKept(r.fastingKept);
+    if (r.offPlan) setOffPlan(true);
   }
 
   const set = (k: string) => (v: string) => {
@@ -323,6 +342,8 @@ function TodayForm({
       energy,
       hunger,
       fastingKept: kept,
+      offPlan: offPlan || undefined,
+      offPlanNote: offPlan ? draft.offPlanNote.trim() || undefined : undefined,
       notes: draft.notes.trim() || undefined,
     });
     setSaved(true);
@@ -423,6 +444,32 @@ function TodayForm({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="rounded-2xl bg-lilac text-lilac-ink p-3 space-y-2">
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={offPlan}
+            onChange={(e) => {
+              setSaved(false);
+              setOffPlan(e.target.checked);
+            }}
+            className="h-5 w-5 accent-[var(--accent)]"
+          />
+          <span className="font-medium">Giorno fuori regola</span>
+        </label>
+        <p className="text-xs opacity-80">
+          Una cena, un evento: il giorno non interrompe la serie e non genera avvisi.
+        </p>
+        {offPlan && (
+          <input
+            value={draft.offPlanNote}
+            onChange={(e) => set("offPlanNote")(e.target.value)}
+            placeholder="Che cosa è successo (facoltativo)"
+            className="w-full rounded-xl border border-line bg-card px-3 py-3 text-foreground"
+          />
+        )}
       </div>
 
       <label className="block">

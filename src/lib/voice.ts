@@ -16,6 +16,7 @@ export type VoiceResult = {
     hunger: number;
   }>;
   fastingKept?: boolean;
+  offPlan?: boolean;
   notes?: string;
   /** frasi leggibili di ciò che è stato capito, per mostrarle all'utente */
   understood: string[];
@@ -153,6 +154,12 @@ export function parseVoice(raw: string): VoiceResult {
     if (out.fastingKept !== undefined) {
       out.understood.push(`finestra ${out.fastingKept ? "rispettata" : "non rispettata"}`);
     }
+  }
+
+  // giorno fuori regola
+  if (/\b(?:giorno\s+)?fuori\s+regola\b|\b(?:cena|pranzo)\s+fuori\b|\bgiorno\s+libero\b/.test(t)) {
+    out.offPlan = true;
+    out.understood.push("giorno fuori regola");
   }
 
   return out;

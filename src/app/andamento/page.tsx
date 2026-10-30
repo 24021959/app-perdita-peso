@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import LineCard from "@/components/Charts";
+import CompareCard from "@/components/CompareCard";
+import MilestonesCard from "@/components/MilestonesCard";
 import PageBanner from "@/components/PageBanner";
 import { TONES, type Tone } from "@/lib/sections";
 import { useData } from "@/lib/useData";
@@ -135,6 +137,10 @@ export default function AndamentoPage() {
         series={[{ key: "Vita", label: "Vita", color: "#e0803f", dots: true }]}
       />
 
+      <MilestonesCard entries={entries} settings={settings} today={today} />
+
+      <CompareCard entries={entries} />
+
       <section className="rounded-2xl bg-card border border-line p-4">
         <h2 className="text-lg font-semibold">Finestra alimentare rispettata</h2>
         <div className="grid grid-cols-7 gap-1.5 mt-3 text-center text-xs text-muted">
@@ -144,7 +150,9 @@ export default function AndamentoPage() {
           {cal.map((c) => {
             const color = c.future
               ? "bg-transparent border border-dashed border-line"
-              : c.e?.fastingKept === true
+              : c.e?.offPlan
+                ? "bg-lilac text-lilac-ink font-semibold"
+                : c.e?.fastingKept === true
                 ? "bg-mint text-mint-ink font-semibold"
                 : c.e?.fastingKept === false
                   ? "bg-peach text-peach-ink font-semibold"
@@ -162,7 +170,7 @@ export default function AndamentoPage() {
           })}
         </div>
         <p className="text-xs text-muted mt-3">
-          Verde: rispettata. Arancio: non rispettata. Grigio: nessun dato. Tocca un giorno per modificarlo.
+          Verde: rispettata. Arancio: non rispettata. Viola: fuori regola (non conta). Grigio: nessun dato. Tocca un giorno per modificarlo.
         </p>
       </section>
     </div>

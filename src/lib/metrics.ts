@@ -66,10 +66,17 @@ export function estimateArrival(entries: Entry[], settings: Settings, today: str
 export function fastingStreak(entries: Entry[], today: string): number {
   const map = new Map(entries.map((e) => [e.date, e]));
   const t = map.get(today);
-  if (t?.fastingKept === false) return 0;
-  let d = t?.fastingKept ? today : addDays(today, -1);
+  if (t?.fastingKept === false && !t.offPlan) return 0;
+  let d = t?.fastingKept || t?.offPlan ? today : addDays(today, -1);
   let n = 0;
-  while (map.get(d)?.fastingKept === true) {
+  for (let guard = 0; guard < 3660; guard++) {
+    const e = map.get(d);
+    if (e?.offPlan) {
+      // giorno fuori regola: neutro, non conta e non spezza la serie
+      d = addDays(d, -1);
+      continue;
+    }
+    if (e?.fastingKept !== true) break;
     n++;
     d = addDays(d, -1);
   }

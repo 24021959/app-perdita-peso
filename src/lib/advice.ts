@@ -73,10 +73,11 @@ export function buildAdvice(
     if (back3.length) {
       const ref = Math.min(...back3.map((e) => e.weight as number));
       if (w - ref > 1.5) {
+        const offRecent = entries.some((e) => e.offPlan && diffDays(last.date, e.date) >= 0 && diffDays(last.date, e.date) <= 3);
         add(
           "info",
           "Salita improvvisa",
-          `+${fmt(w - ref)} kg in pochi giorni: di solito è ritenzione di liquidi. Ricontrolla fra 3 giorni prima di preoccuparti.`,
+          `+${fmt(w - ref)} kg in pochi giorni: di solito è ritenzione di liquidi${offRecent ? ", ed è normale dopo un giorno fuori regola" : ""}. Ricontrolla fra 3 giorni prima di preoccuparti.`,
         );
       }
     }
@@ -99,7 +100,7 @@ export function buildAdvice(
 
   // ---- Digiuno
   const week = lastDays(entries, today, 7);
-  const missed = week.filter((e) => e.fastingKept === false).length;
+  const missed = week.filter((e) => e.fastingKept === false && !e.offPlan).length;
   if (missed > 2) {
     add(
       "info",

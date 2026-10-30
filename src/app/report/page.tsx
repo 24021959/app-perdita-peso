@@ -34,7 +34,7 @@ export default function ReportPage() {
     const bpHigh = bp.filter((e) => (e.systolic as number) > 140 || (e.diastolic as number) > 90).length;
     const gl = period.filter((e) => e.glucose !== undefined);
     const waists = period.filter((e) => e.waist !== undefined);
-    const kept = period.filter((e) => e.fastingKept !== undefined);
+    const kept = period.filter((e) => e.fastingKept !== undefined && !e.offPlan);
 
     return {
       last,
@@ -54,6 +54,7 @@ export default function ReportPage() {
       water: avg(period.filter((e) => e.water !== undefined).map((e) => e.water as number)),
       steps: avg(period.filter((e) => e.steps !== undefined).map((e) => e.steps as number)),
       keptDays: kept.filter((e) => e.fastingKept).length,
+      offDays: period.filter((e) => e.offPlan).length,
       keptTotal: kept.length,
     };
   }, [entries, days, today]);
@@ -153,6 +154,7 @@ export default function ReportPage() {
 
       <Block title="Abitudini">
         <Row k="Digiuno 16:8 rispettato" v={data.keptTotal ? `${data.keptDays} giorni su ${data.keptTotal} registrati` : "—"} />
+        <Row k="Giorni fuori regola" v={String(data.offDays)} />
         <Row k="Sonno medio" v={data.sleep === undefined ? "—" : `${f1(data.sleep)} ore`} />
         <Row k="Acqua media" v={data.water === undefined ? "—" : `${f1(data.water)} litri`} />
         <Row k="Passi medi" v={data.steps === undefined ? "—" : String(Math.round(data.steps))} />
