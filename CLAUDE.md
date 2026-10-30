@@ -27,6 +27,7 @@ Documenti di riferimento nel Progetto chat "App perdita peso": `scheda-progetto.
 - `src/lib/metrics.ts`: media 7 giorni, ritmo settimanale (regressione 21 giorni), data stimata di arrivo, serie nella finestra.
 - `src/lib/advice.ts`: tutte le regole dei consigli, con le soglie del documento. Modificare le soglie solo qui.
 - `src/lib/menu.ts`: pool di 9 colazioni e 10 pranzi, generazione settimana, scambio piatto, lista della spesa.
+- `src/lib/voice.ts`: interpreta la dettatura vocale in italiano (parole-numero, "virgola", "e mezzo", pressione "130 su 80", note). `src/components/VoiceButton.tsx` usa la Web Speech API del browser (`it-IT`); i valori riconosciuti riempiono il registro, poi si preme Salva. Provarla con un riconoscimento finto (Chromium ha già il suo: simulare sia `SpeechRecognition` sia `webkitSpeechRecognition`).
 - `src/lib/fasting.ts`: stato del timer del digiuno. `src/lib/dates.ts`: funzioni sulle date locali (sempre chiavi `YYYY-MM-DD`, mai UTC).
 - `src/app/`: `/` Oggi (accetta `?d=YYYY-MM-DD`), `/andamento`, `/menu`, `/consigli`, `/salute`, `/report` (stampabile), `/impostazioni`.
 - `src/components/`: `BottomNav`, `Charts` (grafico a linee riusabile), `ExamFields`, `RegisterSW`.

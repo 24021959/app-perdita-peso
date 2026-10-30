@@ -10,6 +10,8 @@ import { addDays, diffDays, formatDate, todayKey, weekStart } from "@/lib/dates"
 import { buildAdvice } from "@/lib/advice";
 import { baseWeek, breakfastOf, lunchOf } from "@/lib/menu";
 import { avgAt } from "@/lib/metrics";
+import VoiceButton from "@/components/VoiceButton";
+import { parseVoice } from "@/lib/voice";
 import type { Entry, Exam, MenuPlan } from "@/lib/types";
 
 const num = (v = ""): number | undefined => {
@@ -271,6 +273,23 @@ function TodayForm({
   const [hunger, setHunger] = useState(initial?.hunger);
   const [kept, setKept] = useState(initial?.fastingKept);
   const [saved, setSaved] = useState(false);
+  const [heard, setHeard] = useState<{ text: string; understood: string[] } | null>(null);
+
+  function applyVoice(text: string) {
+    const r = parseVoice(text);
+    setHeard({ text, understood: r.understood });
+    if (!r.understood.length) return;
+    setSaved(false);
+    const next: Record<string, string> = {};
+    for (const [k, v] of Object.entries(r.values)) {
+      if (k !== "energy" && k !== "hunger") next[k] = String(v);
+    }
+    if (r.notes) next.notes = draft.notes ? `${draft.notes} ${r.notes}` : r.notes;
+    setDraft((d) => ({ ...d, ...next }));
+    if (r.values.energy !== undefined) setEnergy(r.values.energy);
+    if (r.values.hunger !== undefined) setHunger(r.values.hunger);
+    if (r.fastingKept !== undefined) setKept(r.fastingKept);
+  }
 
   const set = (k: string) => (v: string) => {
     setSaved(false);
@@ -299,6 +318,26 @@ function TodayForm({
   return (
     <section className="rounded-2xl bg-card border border-line p-4 space-y-4">
       <h2 className="text-lg font-semibold">Registro di oggi</h2>
+
+      <div className="space-y-2">
+        <VoiceButton onText={applyVoice} />
+        <p className="text-xs text-muted">
+          Esempio: &quot;peso 92 virgola 4, vita 106, acqua un litro e mezzo, sonno 7 ore, pressione 130 su 80,
+          glicemia 98, energia 4, fame 2, finestra rispettata sì&quot;. La dettatura usa il servizio vocale del
+          browser. Controlla i campi e poi premi Salva.
+        </p>
+        {heard && (
+          <div className="rounded-xl bg-line/50 p-3 text-sm">
+            <p className="text-muted">Ho sentito: &quot;{heard.text}&quot;</p>
+            <p className="mt-1">
+              {heard.understood.length
+                ? `Capito: ${heard.understood.join(" · ")}`
+                : "Non ho capito nessun valore. Di' prima il nome e poi il numero, ad esempio \"peso 92 virgola 4\"."}
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <Field label="Peso" unit="kg" value={draft.weight} onChange={set("weight")} />
         <Field label="Vita" unit="cm" value={draft.waist} onChange={set("waist")} />
