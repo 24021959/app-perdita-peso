@@ -1,0 +1,33 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { getMeta, putMeta } from "./db";
+
+/** Legge e scrive un valore generico salvato nel dispositivo. */
+export function useMeta<T>(key: string, fallback: T) {
+  const [value, setValue] = useState<T>(fallback);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const v = await getMeta<T>(key);
+      if (cancelled) return;
+      if (v !== undefined) setValue(v);
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  const save = useCallback(
+    async (next: T) => {
+      setValue(next);
+      await putMeta(key, next);
+    },
+    [key],
+  );
+
+  return [value, save, ready] as const;
+}

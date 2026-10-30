@@ -14,7 +14,7 @@ const items = [
 export default function BottomNav() {
   const path = usePathname();
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-line">
+    <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-line print:hidden">
       <ul className="max-w-xl mx-auto grid grid-cols-5">
         {items.map((it) => {
           const active =

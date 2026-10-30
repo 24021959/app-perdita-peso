@@ -60,13 +60,43 @@ export async function saveSettings(settings: Settings): Promise<void> {
   );
 }
 
+export async function getMeta<T>(key: string): Promise<T | undefined> {
+  const db = await open();
+  return wrap<T | undefined>(
+    db.transaction("settings").objectStore("settings").get(key),
+  );
+}
+
+export async function putMeta(key: string, value: unknown): Promise<void> {
+  const db = await open();
+  await wrap(
+    db.transaction("settings", "readwrite").objectStore("settings").put(value, key),
+  );
+}
+
+async function allMeta(): Promise<Record<string, unknown>> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const out: Record<string, unknown> = {};
+    const req = db.transaction("settings").objectStore("settings").openCursor();
+    req.onsuccess = () => {
+      const cur = req.result;
+      if (!cur) return resolve(out);
+      if (cur.key !== "main") out[String(cur.key)] = cur.value;
+      cur.continue();
+    };
+    req.onerror = () => reject(req.error);
+  });
+}
+
 export async function exportBackup(): Promise<string> {
-  const [entries, settings] = await Promise.all([
+  const [entries, settings, meta] = await Promise.all([
     getAllEntries(),
     getSettings(),
+    allMeta(),
   ]);
   return JSON.stringify(
-    { app: "app-perdita-peso", version: 1, settings, entries },
+    { app: "app-perdita-peso", version: 2, settings, entries, meta },
     null,
     2,
   );
@@ -81,5 +111,8 @@ export async function importBackup(json: string): Promise<number> {
     if (typeof e.date === "string") await saveEntry(e);
   }
   if (data.settings) await saveSettings({ ...DEFAULT_SETTINGS, ...data.settings });
+  if (data.meta && typeof data.meta === "object") {
+    for (const [k, v] of Object.entries(data.meta)) await putMeta(k, v);
+  }
   return data.entries.length;
 }

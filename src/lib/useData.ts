@@ -17,8 +17,18 @@ export function useData() {
   }, []);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    let cancelled = false;
+    (async () => {
+      const [e, s] = await Promise.all([getAllEntries(), getSettings()]);
+      if (cancelled) return;
+      setEntries(e);
+      setSettingsState(s);
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const upsert = useCallback(
     async (entry: Entry) => {

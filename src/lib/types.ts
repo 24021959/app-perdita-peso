@@ -31,3 +31,22 @@ export const DEFAULT_SETTINGS: Settings = {
   windowStart: "08:00",
   windowEnd: "16:00",
 };
+
+export type Exam = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  glucose?: number; // mg/dl
+  hba1c?: number; // %
+  chol?: number; // colesterolo totale mg/dl
+  hdl?: number;
+  ldl?: number;
+  trig?: number; // trigliceridi mg/dl
+  creat?: number; // creatinina mg/dl
+  alt?: number; // U/L
+  ast?: number; // U/L
+};
+
+export type MenuPlan = {
+  weekStart: string;
+  days: { breakfast: string; lunch: string }[]; // 7 giorni, lunedì = 0
+};

@@ -1,21 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useData } from "@/lib/useData";
 import { exportBackup, importBackup } from "@/lib/db";
 import type { Settings } from "@/lib/types";
 
 export default function ImpostazioniPage() {
   const { settings, ready, updateSettings, reload } = useData();
-  const [form, setForm] = useState<Settings | null>(null);
+  if (!ready) return <p className="text-muted">Carico…</p>;
+  return (
+    <SettingsForm
+      initial={settings}
+      updateSettings={updateSettings}
+      reload={reload}
+    />
+  );
+}
+
+function SettingsForm({
+  initial,
+  updateSettings,
+  reload,
+}: {
+  initial: Settings;
+  updateSettings: (s: Settings) => Promise<void>;
+  reload: () => Promise<void>;
+}) {
+  const [form, setForm] = useState<Settings>(initial);
   const [msg, setMsg] = useState("");
-
-  useEffect(() => {
-    if (ready && !form) setForm(settings);
-  }, [ready, settings, form]);
-
-  if (!form) return <p className="text-muted">Carico…</p>;
 
   const numField = (k: keyof Settings, label: string) => (
     <label className="block" key={k}>
