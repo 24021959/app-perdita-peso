@@ -85,13 +85,13 @@ export default function VoiceButton({ onText }: { onText: (text: string) => void
         aria-pressed={listening}
         className={`w-full rounded-xl py-4 text-lg font-semibold border ${
           listening
-            ? "bg-red-600 text-white border-red-600 animate-pulse"
+            ? "bg-rose-ink text-card border-rose-ink animate-pulse"
             : "bg-card text-accent border-accent"
         }`}
       >
         {listening ? "Sto ascoltando… tocca per fermare" : "🎤 Detta i dati"}
       </button>
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-sm text-rose-ink">{error}</p>}
     </div>
   );
 }

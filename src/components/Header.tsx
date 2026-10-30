@@ -4,15 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { APP_NAME } from "@/lib/config";
+import { SECTIONS, type Section } from "@/lib/sections";
 import SyncBadge from "./SyncBadge";
 
-const items = [
-  { href: "/", label: "Oggi" },
-  { href: "/andamento/", label: "Andamento" },
-  { href: "/menu/", label: "Menu" },
-  { href: "/salute/", label: "Salute" },
-  { href: "/consigli/", label: "Consigli" },
-  { href: "/impostazioni/", label: "Impostazioni" },
+const items: { href: string; section: Section }[] = [
+  { href: "/", section: "oggi" },
+  { href: "/andamento/", section: "andamento" },
+  { href: "/menu/", section: "menu" },
+  { href: "/salute/", section: "salute" },
+  { href: "/consigli/", section: "consigli" },
+  { href: "/impostazioni/", section: "impostazioni" },
 ];
 
 const isActive = (path: string, href: string) =>
@@ -52,10 +53,10 @@ export default function Header() {
                 <Link
                   href={it.href}
                   className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                    isActive(path, it.href) ? "bg-accent/10 text-accent" : "text-muted hover:text-foreground"
+                    isActive(path, it.href) ? SECTIONS[it.section].chip : "text-muted hover:text-foreground"
                   }`}
                 >
-                  {it.label}
+                  {SECTIONS[it.section].label}
                 </Link>
               </li>
             ))}
@@ -111,10 +112,13 @@ export default function Header() {
                   <Link
                     href={it.href}
                     className={`block rounded-xl px-4 py-4 text-lg ${
-                      isActive(path, it.href) ? "bg-accent/10 font-semibold text-accent" : ""
+                      isActive(path, it.href) ? `${SECTIONS[it.section].chip} font-semibold` : ""
                     }`}
                   >
-                    {it.label}
+                    <span className="mr-3" aria-hidden="true">
+                      {SECTIONS[it.section].icon}
+                    </span>
+                    {SECTIONS[it.section].label}
                   </Link>
                 </li>
               ))}

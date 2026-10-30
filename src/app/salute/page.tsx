@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import LineCard from "@/components/Charts";
+import PageBanner from "@/components/PageBanner";
 import { EXAM_FIELDS, type ExamKey } from "@/components/ExamFields";
 import { diffDays, longDate, shortDate, todayKey } from "@/lib/dates";
 import { lastDays } from "@/lib/metrics";
@@ -27,16 +28,17 @@ export default function SalutePage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold">Salute</h1>
-      <p className="text-sm text-muted">Ultimi 30 giorni. I valori si inseriscono nel registro di Oggi.</p>
+      <PageBanner section="salute" title="Salute">
+        Ultimi 30 giorni. I valori si inseriscono nel registro di Oggi.
+      </PageBanner>
 
       <LineCard
         title="Pressione"
         height={200}
         data={rows((e) => ({ Max: e.systolic, Min: e.diastolic }))}
         series={[
-          { key: "Max", label: "Massima", color: "#b91c1c", dots: true },
-          { key: "Min", label: "Minima", color: "#2563eb", dots: true },
+          { key: "Max", label: "Massima", color: "#d9486b", dots: true },
+          { key: "Min", label: "Minima", color: "#3f8fd6", dots: true },
         ]}
       />
       <LineCard
@@ -45,7 +47,7 @@ export default function SalutePage() {
         height={180}
         band={[70, 100]}
         data={rows((e) => ({ Glicemia: e.glucose }))}
-        series={[{ key: "Glicemia", label: "Glicemia", color: "#7c3aed", dots: true }]}
+        series={[{ key: "Glicemia", label: "Glicemia", color: "#8a63d2", dots: true }]}
       />
       <LineCard
         title="Sonno"
@@ -53,31 +55,31 @@ export default function SalutePage() {
         height={170}
         band={[6, 9]}
         data={rows((e) => ({ Sonno: e.sleep }))}
-        series={[{ key: "Sonno", label: "Ore", color: "#0e7490", dots: true }]}
+        series={[{ key: "Sonno", label: "Ore", color: "#5b7bd5", dots: true }]}
       />
       <LineCard
         title="Acqua"
         unit=" l"
         height={170}
         data={rows((e) => ({ Acqua: e.water }))}
-        series={[{ key: "Acqua", label: "Litri", color: "#0284c7", dots: true }]}
+        series={[{ key: "Acqua", label: "Litri", color: "#3aa0d8", dots: true }]}
       />
       <LineCard
         title="Passi"
         height={170}
         data={rows((e) => ({ Passi: e.steps }))}
-        series={[{ key: "Passi", label: "Passi", color: "#15803d", dots: true }]}
+        series={[{ key: "Passi", label: "Passi", color: "#3fa377", dots: true }]}
       />
 
-      <section className="rounded-2xl bg-card border border-line p-4 space-y-3">
+      <section className="rounded-2xl bg-rose text-rose-ink p-4 space-y-3">
         <h2 className="text-lg font-semibold">Esami del sangue</h2>
         {nextDue ? (
-          <p className="text-sm text-muted">
+          <p className="text-sm opacity-90">
             Ultimo: {longDate(last.date)}. Prossimo consigliato: {longDate(nextDue)}
             {diffDays(today, nextDue) > 0 ? " (scaduto)" : ""}.
           </p>
         ) : (
-          <p className="text-sm text-muted">Nessun esame registrato. Controllo consigliato ogni 3 mesi.</p>
+          <p className="text-sm opacity-90">Nessun esame registrato. Controllo consigliato ogni 3 mesi.</p>
         )}
         <ExamForm onSave={(ex) => saveExams([...exams, ex])} />
       </section>
@@ -95,7 +97,7 @@ export default function SalutePage() {
 
       <Link
         href="/report/"
-        className="block w-full rounded-xl border border-accent text-accent py-4 text-center text-lg font-semibold"
+        className="block w-full rounded-xl bg-sky text-sky-ink py-4 text-center text-lg font-semibold"
       >
         Report per il medico
       </Link>
@@ -135,7 +137,7 @@ function ExamForm({ onSave }: { onSave: (e: Exam) => Promise<void> }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-xl bg-accent text-white py-3 font-semibold"
+        className="w-full rounded-xl bg-accent text-on-accent py-3 font-semibold"
       >
         Aggiungi esame
       </button>
@@ -172,7 +174,7 @@ function ExamForm({ onSave }: { onSave: (e: Exam) => Promise<void> }) {
         <button type="button" onClick={() => setOpen(false)} className="rounded-xl border border-line py-3">
           Annulla
         </button>
-        <button type="button" onClick={submit} className="rounded-xl bg-accent text-white py-3 font-semibold">
+        <button type="button" onClick={submit} className="rounded-xl bg-accent text-on-accent py-3 font-semibold">
           Salva esame
         </button>
       </div>

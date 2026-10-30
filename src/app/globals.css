@@ -1,12 +1,102 @@
 @import "tailwindcss";
 
+/* Palette: sfondo caldo, verde come colore principale e sei pastelli per distinguere le sezioni.
+   Il tema scuro si sceglie in Impostazioni → Aspetto (automatico, chiaro, scuro). */
 :root {
-  --background: #f6f5f1;
-  --foreground: #1c1c1a;
+  --background: #f7f4ee;
+  --foreground: #1f2421;
   --card: #ffffff;
-  --accent: #1f6f5c;
-  --muted: #6b6b66;
-  --line: #e3e1da;
+  --accent: #2a7562;
+  --on-accent: #ffffff;
+  --muted: #646b66;
+  --line: #e7e2d8;
+  --mint: #dcf2e8;
+  --mint-ink: #1f6a56;
+  --sky: #dcecf9;
+  --sky-ink: #1d5a87;
+  --peach: #fde5d2;
+  --peach-ink: #98481a;
+  --rose: #fbdce3;
+  --rose-ink: #9a2b49;
+  --lilac: #e8e0f8;
+  --lilac-ink: #5a3d9b;
+  --butter: #fbf0c6;
+  --butter-ink: #77590a;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --background: #131719;
+  --foreground: #ecefec;
+  --card: #1c2125;
+  --accent: #6fd3b4;
+  --on-accent: #0d2a22;
+  --muted: #9aa5a0;
+  --line: #2c3338;
+  --mint: #1d3b33;
+  --mint-ink: #9be3c8;
+  --sky: #1b3448;
+  --sky-ink: #a4d0f3;
+  --peach: #43301f;
+  --peach-ink: #f6c9a2;
+  --rose: #47232d;
+  --rose-ink: #f6adbf;
+  --lilac: #2d2851;
+  --lilac-ink: #cdbdf6;
+  --butter: #3d3716;
+  --butter-ink: #f1da82;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --background: #131719;
+  --foreground: #ecefec;
+  --card: #1c2125;
+  --accent: #6fd3b4;
+  --on-accent: #0d2a22;
+  --muted: #9aa5a0;
+  --line: #2c3338;
+  --mint: #1d3b33;
+  --mint-ink: #9be3c8;
+  --sky: #1b3448;
+  --sky-ink: #a4d0f3;
+  --peach: #43301f;
+  --peach-ink: #f6c9a2;
+  --rose: #47232d;
+  --rose-ink: #f6adbf;
+  --lilac: #2d2851;
+  --lilac-ink: #cdbdf6;
+  --butter: #3d3716;
+  --butter-ink: #f1da82;
+    color-scheme: dark;
+  }
+}
+
+/* in stampa (report per il medico) sempre colori chiari */
+@media print {
+  :root, :root[data-theme="dark"] {
+  --background: #f7f4ee;
+  --foreground: #1f2421;
+  --card: #ffffff;
+  --accent: #2a7562;
+  --on-accent: #ffffff;
+  --muted: #646b66;
+  --line: #e7e2d8;
+  --mint: #dcf2e8;
+  --mint-ink: #1f6a56;
+  --sky: #dcecf9;
+  --sky-ink: #1d5a87;
+  --peach: #fde5d2;
+  --peach-ink: #98481a;
+  --rose: #fbdce3;
+  --rose-ink: #9a2b49;
+  --lilac: #e8e0f8;
+  --lilac-ink: #5a3d9b;
+  --butter: #fbf0c6;
+  --butter-ink: #77590a;
+    color-scheme: light;
+  }
 }
 
 @theme inline {
@@ -14,12 +104,31 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
+  --color-sky: var(--sky);
+  --color-sky-ink: var(--sky-ink);
+  --color-peach: var(--peach);
+  --color-peach-ink: var(--peach-ink);
+  --color-rose: var(--rose);
+  --color-rose-ink: var(--rose-ink);
+  --color-lilac: var(--lilac);
+  --color-lilac-ink: var(--lilac-ink);
+  --color-butter: var(--butter);
+  --color-butter-ink: var(--butter-ink);
 }
 
 html {
   font-size: 18px;
+}
+html[data-font="large"] {
+  font-size: 20px;
+}
+html[data-font="xl"] {
+  font-size: 22px;
 }
 
 body {

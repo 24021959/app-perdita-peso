@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import PageBanner from "@/components/PageBanner";
 import { addDays, shortDate, todayKey, weekStart } from "@/lib/dates";
+import { TONES, type Tone } from "@/lib/sections";
 import { useMeta } from "@/lib/useMeta";
 import {
   DAY_NAMES,
@@ -45,7 +47,9 @@ function WeekMenu({
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold">Menu della settimana</h1>
+      <PageBanner section="menu" title="Menu della settimana">
+        Colazione dopo le 8:00, pranzo entro le 16:00.
+      </PageBanner>
 
       <div className="grid grid-cols-2 gap-2">
         {[
@@ -57,7 +61,7 @@ function WeekMenu({
             type="button"
             onClick={() => setWhich(o.n)}
             className={`rounded-xl border py-2 ${
-              (o.n === 0) === isCurrent ? "bg-accent text-white border-accent" : "bg-card border-line"
+              (o.n === 0) === isCurrent ? "bg-accent text-on-accent border-accent" : "bg-card border-line"
             }`}
           >
             {o.t}
@@ -65,14 +69,14 @@ function WeekMenu({
         ))}
       </div>
       <p className="text-sm text-muted">
-        Settimana dal {shortDate(ws)} al {shortDate(addDays(ws, 6))}. Colazione dopo le 8:00, pranzo entro le 16:00.
+        Settimana dal {shortDate(ws)} al {shortDate(addDays(ws, 6))}.
       </p>
 
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => savePlan(generateWeek(ws))}
-          className="rounded-xl bg-accent text-white py-3 font-semibold"
+          className="rounded-xl bg-accent text-on-accent py-3 font-semibold"
         >
           Rigenera il menu
         </button>
@@ -96,16 +100,20 @@ function WeekMenu({
               isCurrent && i === todayIdx ? "border-accent" : "border-line"
             }`}
           >
-            <p className="font-semibold">
-              {DAY_NAMES[i]}
-              {isCurrent && i === todayIdx && <span className="text-accent text-sm"> · oggi</span>}
+            <p className="flex items-center gap-2">
+              <span className={`rounded-full px-3 py-1 text-sm font-semibold ${TONES[i % TONES.length].chip}`}>
+                {DAY_NAMES[i]}
+              </span>
+              {isCurrent && i === todayIdx && <span className="text-accent text-sm font-medium">oggi</span>}
             </p>
             <MealRow
+              tone={TONES[2]}
               label="Colazione"
               text={breakfastOf(d.breakfast).name}
               onSwap={() => savePlan(swapMeal(plan, i, "breakfast"))}
             />
             <MealRow
+              tone={TONES[0]}
               label="Pranzo"
               text={lunchOf(d.lunch).name}
               onSwap={() => savePlan(swapMeal(plan, i, "lunch"))}
@@ -114,7 +122,7 @@ function WeekMenu({
         ))}
       </ul>
 
-      <section className="rounded-2xl bg-card border border-line p-4">
+      <section className="rounded-2xl bg-butter text-butter-ink p-4">
         <button
           type="button"
           onClick={() => setShowShop((v) => !v)}
@@ -137,7 +145,7 @@ function WeekMenu({
                       type="checkbox"
                       checked={checked.includes(it.name)}
                       onChange={() => toggle(it.name)}
-                      className="h-5 w-5 accent-[#1f6f5c]"
+                      className="h-5 w-5 accent-[var(--accent)]"
                     />
                     <span className={checked.includes(it.name) ? "line-through text-muted" : ""}>
                       {it.name}
@@ -159,18 +167,28 @@ function WeekMenu({
   );
 }
 
-function MealRow({ label, text, onSwap }: { label: string; text: string; onSwap: () => void }) {
+function MealRow({
+  label,
+  text,
+  tone,
+  onSwap,
+}: {
+  label: string;
+  text: string;
+  tone: Tone;
+  onSwap: () => void;
+}) {
   return (
-    <div className="mt-3 flex items-start gap-3">
+    <div className={`mt-3 flex items-start gap-3 rounded-xl p-3 ${tone.soft}`}>
       <div className="flex-1">
-        <p className="text-xs text-muted uppercase tracking-wide">{label}</p>
+        <p className={`text-xs uppercase tracking-wide ${tone.ink}`}>{label}</p>
         <p>{text}</p>
       </div>
       <button
         type="button"
         onClick={onSwap}
         aria-label={`Cambia ${label.toLowerCase()}`}
-        className="shrink-0 rounded-lg border border-line px-3 py-2 text-sm text-accent"
+        className="shrink-0 rounded-lg border border-line bg-card px-3 py-2 text-sm text-accent"
       >
         Cambia
       </button>

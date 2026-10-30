@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import AppearancePanel from "@/components/AppearancePanel";
+import PageBanner from "@/components/PageBanner";
 import SyncPanel from "@/components/SyncPanel";
 import { useData } from "@/lib/useData";
 import { exportBackup, importBackup } from "@/lib/db";
@@ -9,7 +11,7 @@ import type { Settings } from "@/lib/types";
 
 export default function ImpostazioniPage() {
   const { settings, ready, rev, updateSettings, reload } = useData();
-  if (!ready) return <p className="text-muted">Carico…</p>;
+  if (!ready) return <p className="opacity-80">Carico…</p>;
   return (
     <SettingsForm
       key={rev}
@@ -34,14 +36,14 @@ function SettingsForm({
 
   const numField = (k: keyof Settings, label: string) => (
     <label className="block" key={k}>
-      <span className="text-sm text-muted">{label}</span>
+      <span className="text-sm opacity-80">{label}</span>
       <input
         inputMode="decimal"
         value={String(form[k])}
         onChange={(e) =>
           setForm({ ...form, [k]: parseFloat(e.target.value.replace(",", ".")) || 0 })
         }
-        className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
+        className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg text-foreground"
       />
     </label>
   );
@@ -72,29 +74,29 @@ function SettingsForm({
       <Link href="/" className="text-sm text-accent">
         ← Oggi
       </Link>
-      <h1 className="text-2xl font-semibold">Impostazioni</h1>
+      <PageBanner section="impostazioni" title="Impostazioni" />
 
-      <section className="rounded-2xl bg-card border border-line p-4 space-y-3">
+      <section className="rounded-2xl bg-sky text-sky-ink p-4 space-y-3">
         {numField("heightCm", "Altezza (cm)")}
         {numField("startWeight", "Peso di partenza (kg)")}
         {numField("goalMin", "Obiettivo minimo (kg)")}
         {numField("goalMax", "Obiettivo massimo (kg)")}
         <label className="block">
-          <span className="text-sm text-muted">Inizio finestra alimentare</span>
+          <span className="text-sm opacity-80">Inizio finestra alimentare</span>
           <input
             type="time"
             value={form.windowStart}
             onChange={(e) => setForm({ ...form, windowStart: e.target.value })}
-            className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
+            className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg text-foreground"
           />
         </label>
         <label className="block">
-          <span className="text-sm text-muted">Fine finestra alimentare</span>
+          <span className="text-sm opacity-80">Fine finestra alimentare</span>
           <input
             type="time"
             value={form.windowEnd}
             onChange={(e) => setForm({ ...form, windowEnd: e.target.value })}
-            className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
+            className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg text-foreground"
           />
         </label>
         <button
@@ -103,17 +105,19 @@ function SettingsForm({
             await updateSettings(form);
             setMsg("Impostazioni salvate.");
           }}
-          className="w-full rounded-xl bg-accent text-white py-4 text-lg font-semibold"
+          className="w-full rounded-xl bg-accent text-on-accent py-4 text-lg font-semibold"
         >
           Salva
         </button>
       </section>
 
+      <AppearancePanel />
+
       <SyncPanel />
 
-      <section className="rounded-2xl bg-card border border-line p-4 space-y-3">
+      <section className="rounded-2xl bg-mint text-mint-ink p-4 space-y-3">
         <h2 className="text-lg font-semibold">Backup dei dati</h2>
-        <p className="text-sm text-muted">
+        <p className="text-sm opacity-80">
           I dati restano su questo dispositivo. Scarica un backup ogni tanto e
           importalo per spostarli su un altro telefono o computer.
         </p>
@@ -135,7 +139,7 @@ function SettingsForm({
         </label>
       </section>
 
-      {msg && <p className="text-center text-accent">{msg}</p>}
+      {msg && <p className="text-center text-accent font-medium">{msg}</p>}
     </div>
   );
 }

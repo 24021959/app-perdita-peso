@@ -10,6 +10,7 @@ import { addDays, diffDays, formatDate, todayKey, weekStart } from "@/lib/dates"
 import { buildAdvice } from "@/lib/advice";
 import { baseWeek, breakfastOf, lunchOf } from "@/lib/menu";
 import { avgAt } from "@/lib/metrics";
+import { TONES, type Tone } from "@/lib/sections";
 import VoiceButton from "@/components/VoiceButton";
 import SyncBadge from "@/components/SyncBadge";
 import { parseVoice } from "@/lib/voice";
@@ -29,7 +30,7 @@ function Field(props: {
 }) {
   return (
     <label className="block">
-      <span className="text-sm text-muted">
+      <span className="text-sm opacity-80">
         {props.label}
         {props.unit ? ` (${props.unit})` : ""}
       </span>
@@ -40,6 +41,15 @@ function Field(props: {
         className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg"
       />
     </label>
+  );
+}
+
+function Group({ tone, title, children }: { tone: Tone; title: string; children: React.ReactNode }) {
+  return (
+    <div className={`rounded-2xl p-3 ${tone.chip}`}>
+      <p className="mb-2 text-sm font-semibold">{title}</p>
+      <div className="grid grid-cols-2 gap-3 text-foreground">{children}</div>
+    </div>
   );
 }
 
@@ -63,7 +73,7 @@ function Scale({
             onClick={() => onChange(n)}
             className={`rounded-xl border py-3 text-lg ${
               value === n
-                ? "bg-accent text-white border-accent"
+                ? "bg-accent text-on-accent border-accent"
                 : "bg-card border-line"
             }`}
           >
@@ -165,7 +175,7 @@ function Oggi() {
           )}
         </div>
         {!isToday && (
-          <p className="text-center text-sm text-amber-700">Stai modificando un giorno passato.</p>
+          <p className="text-center text-sm text-peach-ink">Stai modificando un giorno passato.</p>
         )}
       </header>
 
@@ -175,7 +185,9 @@ function Oggi() {
             <div
               key={i}
               className={`rounded-2xl border p-3 ${
-                a.level === "warning" ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"
+                a.level === "warning"
+                  ? "border-rose-ink/30 bg-rose text-rose-ink"
+                  : "border-butter-ink/30 bg-butter text-butter-ink"
               }`}
             >
               <p className="font-semibold">{a.title}</p>
@@ -187,22 +199,24 @@ function Oggi() {
 
       {isToday && (
         <section
-          className={`rounded-3xl p-5 text-white ${fast?.eating ? "bg-amber-700" : "bg-accent"}`}
+          className={`rounded-3xl p-5 text-foreground bg-gradient-to-br ${
+            fast?.eating ? "from-butter to-peach" : "from-mint to-sky"
+          }`}
         >
           {fast ? (
             <>
-              <p className="text-sm opacity-90">{fast.label}</p>
+              <p className="text-sm opacity-80">{fast.label}</p>
               <p className="mt-1 text-4xl font-semibold">{fast.remaining}</p>
-              <p className="mt-1 text-sm opacity-90">{fast.note}</p>
-              <div className="mt-4 h-2 rounded-full bg-white/30 overflow-hidden">
+              <p className="mt-1 text-sm opacity-80">{fast.note}</p>
+              <div className="mt-4 h-2.5 rounded-full bg-foreground/10 overflow-hidden">
                 <div
-                  className="h-full bg-white"
+                  className="h-full rounded-full bg-accent"
                   style={{ width: `${Math.min(100, fast.progress * 100)}%` }}
                 />
               </div>
             </>
           ) : (
-            <p className="opacity-90">Carico…</p>
+            <p className="opacity-80">Carico…</p>
           )}
         </section>
       )}
@@ -215,21 +229,21 @@ function Oggi() {
               Settimana
             </Link>
           </div>
-          <div>
-            <p className="text-xs text-muted uppercase tracking-wide">Colazione</p>
+          <div className="rounded-xl bg-peach p-3">
+            <p className="text-xs text-peach-ink uppercase tracking-wide">Colazione</p>
             <p>{breakfastOf(dayMenu.breakfast).name}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted uppercase tracking-wide">Pranzo</p>
+          <div className="rounded-xl bg-mint p-3">
+            <p className="text-xs text-mint-ink uppercase tracking-wide">Pranzo</p>
             <p>{lunchOf(dayMenu.lunch).name}</p>
           </div>
         </section>
       )}
 
       <section className="grid grid-cols-3 gap-2">
-        <Stat label="Peso" value={`${stats.last.toFixed(1)}`} unit="kg" />
-        <Stat label="Media 7 gg" value={stats.avg ? stats.avg.toFixed(1) : "—"} unit="kg" />
-        <Stat label={`Al ${settings.goalMax}`} value={stats.toGo.toFixed(1)} unit="kg" />
+        <Stat tone={TONES[4]} label="Peso" value={`${stats.last.toFixed(1)}`} unit="kg" />
+        <Stat tone={TONES[1]} label="Media 7 gg" value={stats.avg ? stats.avg.toFixed(1) : "—"} unit="kg" />
+        <Stat tone={TONES[0]} label={`Al ${settings.goalMax}`} value={stats.toGo.toFixed(1)} unit="kg" />
       </section>
 
       {ready ? (
@@ -337,16 +351,20 @@ function TodayForm({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <Group tone={TONES[4]} title="Misure">
         <Field label="Peso" unit="kg" value={draft.weight} onChange={set("weight")} />
         <Field label="Vita" unit="cm" value={draft.waist} onChange={set("waist")} />
+      </Group>
+      <Group tone={TONES[1]} title="Giornata">
         <Field label="Acqua" unit="litri" value={draft.water} onChange={set("water")} />
         <Field label="Sonno" unit="ore" value={draft.sleep} onChange={set("sleep")} />
         <Field label="Passi" value={draft.steps} onChange={set("steps")} />
+      </Group>
+      <Group tone={TONES[3]} title="Controlli">
         <Field label="Glicemia" unit="mg/dl" value={draft.glucose} onChange={set("glucose")} />
         <Field label="Pressione max" value={draft.systolic} onChange={set("systolic")} />
         <Field label="Pressione min" value={draft.diastolic} onChange={set("diastolic")} />
-      </div>
+      </Group>
 
       <div>
         <span className="text-sm text-muted">Aggiungi acqua</span>
@@ -398,7 +416,7 @@ function TodayForm({
                 setKept(o.v);
               }}
               className={`rounded-xl border py-3 text-lg ${
-                kept === o.v ? "bg-accent text-white border-accent" : "bg-card border-line"
+                kept === o.v ? "bg-accent text-on-accent border-accent" : "bg-card border-line"
               }`}
             >
               {o.t}
@@ -420,7 +438,7 @@ function TodayForm({
       <button
         type="button"
         onClick={save}
-        className="w-full rounded-xl bg-accent text-white py-4 text-lg font-semibold"
+        className="w-full rounded-xl bg-accent text-on-accent py-4 text-lg font-semibold"
       >
         Salva
       </button>
@@ -429,13 +447,23 @@ function TodayForm({
   );
 }
 
-function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
+function Stat({
+  label,
+  value,
+  unit,
+  tone,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  tone: Tone;
+}) {
   return (
-    <div className="rounded-2xl bg-card border border-line px-3 py-3 text-center">
-      <p className="text-xs text-muted">{label}</p>
+    <div className={`rounded-2xl px-3 py-3 text-center ${tone.chip}`}>
+      <p className="text-xs opacity-80">{label}</p>
       <p className="mt-0.5 text-2xl font-semibold leading-tight">
         {value}
-        {unit && <span className="ml-1 text-sm font-normal text-muted">{unit}</span>}
+        {unit && <span className="ml-1 text-sm font-normal opacity-80">{unit}</span>}
       </p>
     </div>
   );

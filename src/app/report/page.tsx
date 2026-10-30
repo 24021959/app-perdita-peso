@@ -77,7 +77,7 @@ export default function ReportPage() {
               type="button"
               onClick={() => setDays(d)}
               className={`rounded-xl border py-2 ${
-                days === d ? "bg-accent text-white border-accent" : "bg-card border-line"
+                days === d ? "bg-accent text-on-accent border-accent" : "bg-card border-line"
               }`}
             >
               {d} giorni
@@ -87,7 +87,7 @@ export default function ReportPage() {
         <button
           type="button"
           onClick={() => window.print()}
-          className="w-full rounded-xl bg-accent text-white py-4 text-lg font-semibold"
+          className="w-full rounded-xl bg-accent text-on-accent py-4 text-lg font-semibold"
         >
           Stampa o salva in PDF
         </button>

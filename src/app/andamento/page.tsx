@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import LineCard from "@/components/Charts";
+import PageBanner from "@/components/PageBanner";
+import { TONES, type Tone } from "@/lib/sections";
 import { useData } from "@/lib/useData";
 import { addDays, diffDays, longDate, shortDate, todayKey, weekStart } from "@/lib/dates";
 import { avgAt, bmi, estimateArrival, fastingStreak, weeklyTrend, weightPoints } from "@/lib/metrics";
@@ -76,21 +78,24 @@ export default function AndamentoPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold">Andamento</h1>
+      <PageBanner section="andamento" title="Andamento">
+        Come cambiano peso e vita nel tempo.
+      </PageBanner>
 
       <section className="grid grid-cols-2 gap-3">
-        <Stat label="Peso attuale" value={`${stats.current.toFixed(1)} kg`} />
-        <Stat label="Persi dall'inizio" value={`${stats.lost.toFixed(1)} kg`} />
-        <Stat label="Media 7 giorni" value={stats.avg ? `${stats.avg.toFixed(1)} kg` : "—"} />
+        <Stat tone={TONES[4]} label="Peso attuale" value={`${stats.current.toFixed(1)} kg`} />
+        <Stat tone={TONES[0]} label="Persi dall'inizio" value={`${stats.lost.toFixed(1)} kg`} />
+        <Stat tone={TONES[1]} label="Media 7 giorni" value={stats.avg ? `${stats.avg.toFixed(1)} kg` : "—"} />
         <Stat
+          tone={TONES[2]}
           label="Ritmo"
           value={stats.trend === undefined ? "—" : `${stats.trend > 0 ? "+" : ""}${stats.trend.toFixed(2)} kg/sett.`}
         />
-        <Stat label="BMI" value={stats.bmi.toFixed(1)} />
-        <Stat label="Giorni di fila nella finestra" value={String(stats.streak)} />
+        <Stat tone={TONES[5]} label="BMI" value={stats.bmi.toFixed(1)} />
+        <Stat tone={TONES[3]} label="Giorni di fila nella finestra" value={String(stats.streak)} />
       </section>
 
-      <section className="rounded-2xl bg-card border border-line p-4">
+      <section className="rounded-2xl bg-gradient-to-br from-mint to-sky p-4">
         <p className="text-sm text-muted">Arrivo stimato a {settings.goalMax} kg</p>
         <p className="text-xl font-semibold mt-1">{etaText}</p>
         <p className="text-xs text-muted mt-1">
@@ -105,7 +110,7 @@ export default function AndamentoPage() {
             type="button"
             onClick={() => setRange(r.id)}
             className={`rounded-xl border py-2 ${
-              range === r.id ? "bg-accent text-white border-accent" : "bg-card border-line"
+              range === r.id ? "bg-accent text-on-accent border-accent" : "bg-card border-line"
             }`}
           >
             {r.label}
@@ -119,15 +124,15 @@ export default function AndamentoPage() {
         data={weightRows}
         band={[settings.goalMin, settings.goalMax]}
         series={[
-          { key: "Peso", label: "Peso", color: "#9ca3af", dots: true },
-          { key: "Media", label: "Media 7 gg", color: "#1f6f5c" },
+          { key: "Peso", label: "Peso", color: "#9aa7b5", dots: true },
+          { key: "Media", label: "Media 7 gg", color: "#2f9e84" },
         ]}
       />
       <LineCard
         title="Vita"
         unit=" cm"
         data={waistRows}
-        series={[{ key: "Vita", label: "Vita", color: "#b45309", dots: true }]}
+        series={[{ key: "Vita", label: "Vita", color: "#e0803f", dots: true }]}
       />
 
       <section className="rounded-2xl bg-card border border-line p-4">
@@ -140,9 +145,9 @@ export default function AndamentoPage() {
             const color = c.future
               ? "bg-transparent border border-dashed border-line"
               : c.e?.fastingKept === true
-                ? "bg-accent text-white"
+                ? "bg-mint text-mint-ink font-semibold"
                 : c.e?.fastingKept === false
-                  ? "bg-amber-400 text-black"
+                  ? "bg-peach text-peach-ink font-semibold"
                   : "bg-line text-muted";
             return (
               <Link
@@ -157,17 +162,17 @@ export default function AndamentoPage() {
           })}
         </div>
         <p className="text-xs text-muted mt-3">
-          Verde: rispettata. Giallo: non rispettata. Grigio: nessun dato. Tocca un giorno per modificarlo.
+          Verde: rispettata. Arancio: non rispettata. Grigio: nessun dato. Tocca un giorno per modificarlo.
         </p>
       </section>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone: Tone }) {
   return (
-    <div className="rounded-2xl bg-card border border-line p-4">
-      <p className="text-sm text-muted">{label}</p>
+    <div className={`rounded-2xl p-4 ${tone.chip}`}>
+      <p className="text-sm opacity-80">{label}</p>
       <p className="text-xl font-semibold mt-1">{value}</p>
     </div>
   );

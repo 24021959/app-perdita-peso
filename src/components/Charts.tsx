@@ -42,7 +42,7 @@ export default function LineCard({
           ))}
           {band && (
             <span className="inline-flex items-center gap-1">
-              <span className="inline-block w-3 h-3 rounded-sm bg-emerald-200" />
+              <span className="inline-block w-3 h-3 rounded-sm bg-mint" />
               obiettivo
             </span>
           )}
@@ -54,17 +54,27 @@ export default function LineCard({
         <div className="mt-3" style={{ width: "100%", height }}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
-              <CartesianGrid stroke="#e3e1da" strokeDasharray="3 3" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} interval="preserveStartEnd" minTickGap={24} />
+              <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--muted)" }} stroke="var(--line)" interval="preserveStartEnd" minTickGap={24} />
               <YAxis
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: "var(--muted)" }}
+                stroke="var(--line)"
                 domain={[
                   (min: number) => Math.floor(Math.min(min, band?.[0] ?? min) - 1),
                   (max: number) => Math.ceil(max + 1),
                 ]}
               />
-              <Tooltip formatter={(v) => `${v}${unit}`} />
-              {band && <ReferenceArea y1={band[0]} y2={band[1]} fill="#a7f3d0" fillOpacity={0.45} />}
+              <Tooltip
+                formatter={(v) => `${v}${unit}`}
+                contentStyle={{
+                  background: "var(--card)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 12,
+                  color: "var(--foreground)",
+                }}
+                labelStyle={{ color: "var(--muted)" }}
+              />
+              {band && <ReferenceArea y1={band[0]} y2={band[1]} fill="var(--mint-ink)" fillOpacity={0.18} />}
               {series.map((s) => (
                 <Line
                   key={s.key}

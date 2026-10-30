@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import { APP_NAME } from "@/lib/config";
+import { PREFS_BOOT_SCRIPT } from "@/lib/prefs";
 import RegisterSW from "@/components/RegisterSW";
 import SyncInit from "@/components/SyncInit";
 
@@ -18,12 +19,15 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#1f6f5c",
+  themeColor: "#2a7562",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="it" className="h-full antialiased">
+    <html lang="it" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: PREFS_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <Header />
         <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-5 pb-12">
