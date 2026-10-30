@@ -4,3 +4,6 @@
 // e rilanciare lo schema in supabase/schema.sql.
 export const SUPABASE_URL = "https://btknuzypyvcmjwmrktto.supabase.co";
 export const SUPABASE_KEY = "sb_publishable_QHABoJr0jSfoJ8qUDLAHmg_Q4tSjpV5";
+
+// Nome dell'app mostrato nell'intestazione e sul telefono (per cambiarlo: qui e in public/manifest.webmanifest).
+export const APP_NAME = "Equilibrio";

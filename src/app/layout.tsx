@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
+import { APP_NAME } from "@/lib/config";
 import RegisterSW from "@/components/RegisterSW";
 import SyncInit from "@/components/SyncInit";
 
 const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
-  title: "Perdita peso",
+  title: APP_NAME,
   description: "Diario personale: peso, digiuno 16:8 e menu",
   manifest: `${base}/manifest.webmanifest`,
   icons: { icon: `${base}/icon-192.png`, apple: `${base}/icon-192.png` },
-  appleWebApp: { capable: true, title: "Perdita peso", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -24,10 +25,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="it" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <main className="flex-1 w-full max-w-xl mx-auto px-4 pt-5 pb-28">
+        <Header />
+        <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-5 pb-12">
           {children}
         </main>
-        <BottomNav />
         <RegisterSW />
         <SyncInit />
       </body>

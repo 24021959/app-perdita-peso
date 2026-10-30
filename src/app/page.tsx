@@ -131,43 +131,41 @@ function Oggi() {
 
   return (
     <div className="space-y-5">
-      <header className="space-y-2">
-        <div className="flex items-baseline justify-between">
-          <h1 className="text-2xl font-semibold capitalize">{formatDate(today)}</h1>
-          <Link href="/impostazioni/" className="text-sm text-accent">
-            Impostazioni
-          </Link>
-        </div>
-        <SyncBadge />
-        <div className="flex items-center gap-2 text-sm">
+      <header className="space-y-1">
+        <div className="flex items-center justify-between gap-2">
           <button
             type="button"
+            aria-label="Giorno prima"
             onClick={() => setPicked(addDays(today, -1))}
-            className="rounded-lg border border-line bg-card px-3 py-2"
+            className="h-11 w-11 shrink-0 rounded-full border border-line bg-card text-xl"
           >
-            ← Giorno prima
+            ‹
           </button>
+          <h1 className="flex-1 text-center text-xl font-semibold capitalize">{formatDate(today)}</h1>
+          <button
+            type="button"
+            aria-label="Giorno dopo"
+            disabled={isToday}
+            onClick={() => setPicked(addDays(today, 1))}
+            className="h-11 w-11 shrink-0 rounded-full border border-line bg-card text-xl disabled:opacity-30"
+          >
+            ›
+          </button>
+        </div>
+        <div className="flex items-center justify-center gap-3 text-sm">
+          <SyncBadge />
           {!isToday && (
-            <>
-              <button
-                type="button"
-                onClick={() => setPicked(addDays(today, 1))}
-                className="rounded-lg border border-line bg-card px-3 py-2"
-              >
-                Giorno dopo →
-              </button>
-              <button
-                type="button"
-                onClick={() => setPicked(realToday)}
-                className="rounded-lg border border-accent text-accent px-3 py-2"
-              >
-                Oggi
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => setPicked(realToday)}
+              className="rounded-lg border border-accent text-accent px-3 py-1"
+            >
+              Torna a oggi
+            </button>
           )}
         </div>
         {!isToday && (
-          <p className="text-sm text-amber-700">Stai modificando un giorno passato.</p>
+          <p className="text-center text-sm text-amber-700">Stai modificando un giorno passato.</p>
         )}
       </header>
 
@@ -188,22 +186,25 @@ function Oggi() {
       )}
 
       {isToday && (
-      <section className="rounded-2xl bg-card border border-line p-4">
-        {fast ? (
-          <>
-            <p className="font-semibold">{fast.label}</p>
-            <p className="text-muted text-sm">{fast.detail}</p>
-            <div className="mt-3 h-2 rounded-full bg-line overflow-hidden">
-              <div
-                className={`h-full ${fast.eating ? "bg-amber-500" : "bg-accent"}`}
-                style={{ width: `${Math.min(100, fast.progress * 100)}%` }}
-              />
-            </div>
-          </>
-        ) : (
-          <p className="text-muted">Carico…</p>
-        )}
-      </section>
+        <section
+          className={`rounded-3xl p-5 text-white ${fast?.eating ? "bg-amber-700" : "bg-accent"}`}
+        >
+          {fast ? (
+            <>
+              <p className="text-sm opacity-90">{fast.label}</p>
+              <p className="mt-1 text-4xl font-semibold">{fast.remaining}</p>
+              <p className="mt-1 text-sm opacity-90">{fast.note}</p>
+              <div className="mt-4 h-2 rounded-full bg-white/30 overflow-hidden">
+                <div
+                  className="h-full bg-white"
+                  style={{ width: `${Math.min(100, fast.progress * 100)}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <p className="opacity-90">Carico…</p>
+          )}
+        </section>
       )}
 
       {isToday && (
@@ -225,14 +226,10 @@ function Oggi() {
         </section>
       )}
 
-      <section className="grid grid-cols-2 gap-3">
-        <Stat label="Peso attuale" value={`${stats.last.toFixed(1)} kg`} />
-        <Stat label="Media 7 giorni" value={stats.avg ? `${stats.avg.toFixed(1)} kg` : "—"} />
-        <Stat
-          label={`Al traguardo (${settings.goalMax} kg)`}
-          value={`${stats.toGo.toFixed(1)} kg`}
-        />
-        <Stat label="BMI" value={stats.bmi.toFixed(1)} />
+      <section className="grid grid-cols-3 gap-2">
+        <Stat label="Peso" value={`${stats.last.toFixed(1)}`} unit="kg" />
+        <Stat label="Media 7 gg" value={stats.avg ? stats.avg.toFixed(1) : "—"} unit="kg" />
+        <Stat label={`Al ${settings.goalMax}`} value={stats.toGo.toFixed(1)} unit="kg" />
       </section>
 
       {ready ? (
@@ -432,11 +429,14 @@ function TodayForm({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
-    <div className="rounded-2xl bg-card border border-line p-4">
-      <p className="text-sm text-muted">{label}</p>
-      <p className="text-2xl font-semibold mt-1">{value}</p>
+    <div className="rounded-2xl bg-card border border-line px-3 py-3 text-center">
+      <p className="text-xs text-muted">{label}</p>
+      <p className="mt-0.5 text-2xl font-semibold leading-tight">
+        {value}
+        {unit && <span className="ml-1 text-sm font-normal text-muted">{unit}</span>}
+      </p>
     </div>
   );
 }

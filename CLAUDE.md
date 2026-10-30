@@ -32,7 +32,8 @@ Documenti di riferimento nel Progetto chat "App perdita peso": `scheda-progetto.
 - `src/lib/voice.ts`: interpreta la dettatura vocale in italiano (parole-numero, "virgola", "e mezzo", pressione "130 su 80", note). `src/components/VoiceButton.tsx` usa la Web Speech API del browser (`it-IT`); i valori riconosciuti riempiono il registro, poi si preme Salva. Provarla con un riconoscimento finto (Chromium ha già il suo: simulare sia `SpeechRecognition` sia `webkitSpeechRecognition`).
 - `src/lib/fasting.ts`: stato del timer del digiuno. `src/lib/dates.ts`: funzioni sulle date locali (sempre chiavi `YYYY-MM-DD`, mai UTC).
 - `src/app/`: `/` Oggi (accetta `?d=YYYY-MM-DD`), `/andamento`, `/menu`, `/consigli`, `/salute`, `/report` (stampabile), `/impostazioni`.
-- `src/components/`: `BottomNav`, `Charts` (grafico a linee riusabile), `ExamFields`, `RegisterSW`.
+- `src/components/`: `Header` (intestazione fissa in alto con il nome dell'app; voci in fila da `md` in su, panino a tendina su telefono che si chiude cambiando pagina, con Esc o toccando fuori), `Charts` (grafico a linee riusabile), `ExamFields`, `RegisterSW`.
+- Nome dell'app: `APP_NAME` in `src/lib/config.ts` (oggi "Equilibrio"); va cambiato anche in `public/manifest.webmanifest`.
 - `public/`: `manifest.webmanifest`, `sw.js` (rete prima, cache se offline), icone.
 
 ## Comandi

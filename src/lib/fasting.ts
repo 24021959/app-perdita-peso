@@ -7,6 +7,8 @@ export type FastState = {
   eating: boolean;
   label: string;
   detail: string;
+  remaining: string; // tempo che manca alla fine del periodo corrente
+  note: string;
   progress: number; // 0-1 del periodo corrente
 };
 
@@ -29,6 +31,8 @@ export function fastState(now: Date, start: string, end: string): FastState {
       eating: true,
       label: "Finestra alimentare aperta",
       detail: `Chiude alle ${end}, tra ${fmt(left)}`,
+      remaining: fmt(left),
+      note: `La finestra chiude alle ${end}`,
       progress: (cur - s) / eatingLen,
     };
   }
@@ -38,6 +42,8 @@ export function fastState(now: Date, start: string, end: string): FastState {
     eating: false,
     label: "Digiuno in corso",
     detail: `Da ${fmt(sinceEnd)}. Si mangia alle ${start}, tra ${fmt(left)}`,
+    remaining: fmt(left),
+    note: `Digiuno da ${fmt(sinceEnd)} · si mangia alle ${start}`,
     progress: sinceEnd / fastLen,
   };
 }
