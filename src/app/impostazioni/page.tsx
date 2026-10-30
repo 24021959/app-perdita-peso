@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import SyncPanel from "@/components/SyncPanel";
 import { useData } from "@/lib/useData";
 import { exportBackup, importBackup } from "@/lib/db";
 import type { Settings } from "@/lib/types";
 
 export default function ImpostazioniPage() {
-  const { settings, ready, updateSettings, reload } = useData();
+  const { settings, ready, rev, updateSettings, reload } = useData();
   if (!ready) return <p className="text-muted">Carico…</p>;
   return (
     <SettingsForm
+      key={rev}
       initial={settings}
       updateSettings={updateSettings}
       reload={reload}
@@ -106,6 +108,8 @@ function SettingsForm({
           Salva
         </button>
       </section>
+
+      <SyncPanel />
 
       <section className="rounded-2xl bg-card border border-line p-4 space-y-3">
         <h2 className="text-lg font-semibold">Backup dei dati</h2>

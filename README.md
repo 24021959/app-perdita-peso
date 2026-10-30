@@ -31,4 +31,8 @@ L'app si apre su http://localhost:3000. Per modificare e pubblicare:
 
 Con Claude Code, aprire la cartella `app-perdita-peso`: legge `CLAUDE.md` da solo. Lo stato del lavoro è nella scheda progetto del Progetto chat "App perdita peso".
 
-I dati personali (pesi, misure, esami) non stanno nel repository: restano nel dispositivo. Per averli sull'altro computer: Impostazioni → Scarica backup qui, Importa backup lì.
+I dati personali (pesi, misure, esami) non stanno nel repository. Restano nel dispositivo e, se in Impostazioni → Salvataggio online si accede con l'email, sono copiati anche su Supabase e disponibili su ogni dispositivo. Il backup (Scarica / Importa) resta utile come copia di sicurezza.
+
+## Database (Supabase)
+
+Lo schema è in `supabase/schema.sql`. URL e chiave pubblica del progetto sono in `src/lib/config.ts`. Per usare un altro progetto Supabase: eseguire lo schema, cambiare i due valori, aggiungere `https://24021959.github.io/app-perdita-peso/` tra i Redirect URLs di Authentication, accedere dall'app e premere "Sincronizza ora".

@@ -11,6 +11,7 @@ import { buildAdvice } from "@/lib/advice";
 import { baseWeek, breakfastOf, lunchOf } from "@/lib/menu";
 import { avgAt } from "@/lib/metrics";
 import VoiceButton from "@/components/VoiceButton";
+import SyncBadge from "@/components/SyncBadge";
 import { parseVoice } from "@/lib/voice";
 import type { Entry, Exam, MenuPlan } from "@/lib/types";
 
@@ -83,7 +84,7 @@ export default function OggiPage() {
 }
 
 function Oggi() {
-  const { entries, settings, ready, upsert } = useData();
+  const { entries, settings, ready, rev, upsert } = useData();
   const realToday = todayKey();
   const param = useSearchParams().get("d");
   const [picked, setPicked] = useState<string | null>(null);
@@ -137,6 +138,7 @@ function Oggi() {
             Impostazioni
           </Link>
         </div>
+        <SyncBadge />
         <div className="flex items-center gap-2 text-sm">
           <button
             type="button"
@@ -235,7 +237,7 @@ function Oggi() {
 
       {ready ? (
         <TodayForm
-          key={today}
+          key={`${today}:${rev}`}
           today={today}
           initial={entries.find((e) => e.date === today)}
           onSave={upsert}

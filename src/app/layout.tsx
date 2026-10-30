@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import RegisterSW from "@/components/RegisterSW";
+import SyncInit from "@/components/SyncInit";
 
 const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </main>
         <BottomNav />
         <RegisterSW />
+        <SyncInit />
       </body>
     </html>
   );

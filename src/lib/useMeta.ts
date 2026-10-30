@@ -10,14 +10,19 @@ export function useMeta<T>(key: string, fallback: T) {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const v = await getMeta<T>(key);
-      if (cancelled) return;
-      if (v !== undefined) setValue(v);
-      setReady(true);
-    })();
+    const load = () => {
+      (async () => {
+        const v = await getMeta<T>(key);
+        if (cancelled) return;
+        if (v !== undefined) setValue(v);
+        setReady(true);
+      })();
+    };
+    load();
+    window.addEventListener("peso-data-changed", load);
     return () => {
       cancelled = true;
+      window.removeEventListener("peso-data-changed", load);
     };
   }, [key]);
 

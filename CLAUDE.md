@@ -8,13 +8,13 @@ Documenti di riferimento nel Progetto chat "App perdita peso": `scheda-progetto.
 
 - Sito: https://24021959.github.io/app-perdita-peso/ (GitHub Pages, repository pubblico, branch `main`).
 - Ogni push su `main` fa partire `.github/workflows/pages.yml` (build + deploy, circa 1-2 minuti). Il workflow imposta `NEXT_PUBLIC_BASE_PATH=/app-perdita-peso`.
-- Non si usano Vercel e Supabase (limiti del piano gratuito già esauriti). Non reintrodurli senza chiederlo.
+- Vercel non si usa (il suo piano gratuito rifiuta nuovi progetti). Il database è Supabase, nel progetto "assistente-locanda" (tabelle `peso_*`), solo come copia online dei dati: l'app funziona anche senza.
 
 ## Tecnologia
 
 - Next.js 16 con `output: "export"` (sito statico), TypeScript, Tailwind 4, Recharts per i grafici.
 - **Prima di scrivere codice Next.js leggere le guide in `node_modules/next/dist/docs/`** (questa versione ha differenze rispetto a quella che si conosce; vedi AGENTS.md).
-- Nessun server e nessun login. I dati stanno nel dispositivo (IndexedDB, database `app-perdita-peso`). Perciò: niente route dinamiche, niente API, niente cookie.
+- Nessun server nostro. I dati stanno prima nel dispositivo (IndexedDB, database `app-perdita-peso`) e sono copiati su Supabase se si accede (vedi Sincronizzazione). Perciò: niente route dinamiche, niente API, niente cookie.
 - `next.config.ts` mantiene la regola turbopack per `@tailwindcss/turbopack`: non rimuoverla.
 - `basePath` e `trailingSlash: true`: i link interni usano `next/link` e finiscono con `/` (es. `/andamento/`).
 - Il lint di React segnala `setState` dentro `useEffect`: caricare dati con funzione async dentro l'effetto, oppure passare i valori iniziali a un componente figlio (vedi `TodayForm`, `SettingsForm`).
@@ -23,6 +23,8 @@ Documenti di riferimento nel Progetto chat "App perdita peso": `scheda-progetto.
 
 - `src/lib/types.ts`: `Entry` (una riga per giorno), `Settings`, `Exam`, `MenuPlan`.
 - `src/lib/db.ts`: IndexedDB. Store `entries` (chiave data `YYYY-MM-DD`) e `settings`; nello store `settings` stanno anche le chiavi generiche `exams`, `menu:<lunedì>`, `spesa:<lunedì>` (`getMeta`/`putMeta`). Backup JSON: `exportBackup`/`importBackup` includono tutto.
+- Sincronizzazione online (Supabase), tutta opzionale: `src/lib/config.ts` (URL e chiave pubblica; per cambiare database si cambiano solo questi), `src/lib/syncCore.ts` (logica pura e provata con `node --experimental-strip-types`), `src/lib/sync.ts` (collegamento a Supabase, accesso con link via email, stato), `src/components/SyncPanel.tsx` (Impostazioni), `SyncBadge.tsx`, `SyncInit.tsx`, `supabase/schema.sql` (tabelle `peso_sync_entries` e `peso_sync_kv`, protette dal ruolo "proprietario" `peso_is_owner()`; le altre tabelle `peso_*` già presenti nel database sono vuote e non usate).
+  Regole: ogni modifica locale segna il record "da inviare" (chiavi `sync:*` nello store locale, mai inviate); si inviano i record da inviare e quelli assenti online; si scaricano gli altri (online vince, tranne per le modifiche locali non ancora inviate); al primo accesso di un dispositivo tutto il locale è da inviare. Dopo uno scarico con novità l'evento `peso-data-changed` fa ricaricare le schermate. Accesso: link via email (`signInWithOtp`), poi `rpc('peso_claim_owner')` (solo l'email del proprietario, confermata). L'URL dell'app deve stare tra i Redirect URLs di Supabase (Authentication → URL Configuration), altrimenti il link porta al Site URL del progetto.
 - `src/lib/useData.ts` (misure e impostazioni) e `src/lib/useMeta.ts` (valori generici).
 - `src/lib/metrics.ts`: media 7 giorni, ritmo settimanale (regressione 21 giorni), data stimata di arrivo, serie nella finestra.
 - `src/lib/advice.ts`: tutte le regole dei consigli, con le soglie del documento. Modificare le soglie solo qui.
@@ -39,6 +41,8 @@ Documenti di riferimento nel Progetto chat "App perdita peso": `scheda-progetto.
     npm run dev
     npx eslint src
     npx next build        # genera la cartella out/
+
+Per provare la sincronizzazione senza il vero database si può simulare Supabase con le route di Playwright (sessione finta in `localStorage` alla chiave `sb-btknuzypyvcmjwmrktto-auth-token`, risposte finte per `/rest/v1/peso_sync_*`, `/rest/v1/rpc/peso_claim_owner` e `/auth/v1/otp`).
 
 Per provare la build: servire `out/` (es. `npx serve out -l 4173`). Un backup con dati finti per i test si importa da Impostazioni → Importa backup.
 

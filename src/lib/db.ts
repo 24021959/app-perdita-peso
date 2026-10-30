@@ -27,54 +27,50 @@ function wrap<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+// ---- notifica delle modifiche locali (usata dalla sincronizzazione online)
+// id: "e:<data>" per un giorno, "k:<chiave>" per un valore generico (impostazioni = "k:main")
+let listener: ((id: string) => void) | null = null;
+export function setChangeListener(fn: ((id: string) => void) | null) {
+  listener = fn;
+}
+
+// ---- giorni
 export async function getAllEntries(): Promise<Entry[]> {
   const db = await open();
-  const all = await wrap<Entry[]>(
-    db.transaction("entries").objectStore("entries").getAll(),
-  );
+  const all = await wrap<Entry[]>(db.transaction("entries").objectStore("entries").getAll());
   return all.sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/** Scrive senza avvisare la sincronizzazione (serve alla sincronizzazione stessa). */
+export async function putEntryRaw(entry: Entry): Promise<void> {
+  const db = await open();
+  await wrap(db.transaction("entries", "readwrite").objectStore("entries").put(entry));
+}
+
 export async function saveEntry(entry: Entry): Promise<void> {
-  const db = await open();
-  await wrap(
-    db.transaction("entries", "readwrite").objectStore("entries").put(entry),
-  );
+  await putEntryRaw(entry);
+  listener?.(`e:${entry.date}`);
 }
 
-export async function getSettings(): Promise<Settings> {
-  const db = await open();
-  const saved = await wrap<Settings | undefined>(
-    db.transaction("settings").objectStore("settings").get("main"),
-  );
-  return { ...DEFAULT_SETTINGS, ...saved };
-}
-
-export async function saveSettings(settings: Settings): Promise<void> {
-  const db = await open();
-  await wrap(
-    db
-      .transaction("settings", "readwrite")
-      .objectStore("settings")
-      .put(settings, "main"),
-  );
-}
-
+// ---- valori generici (impostazioni, esami, menu, spesa, stato della sincronizzazione)
 export async function getMeta<T>(key: string): Promise<T | undefined> {
   const db = await open();
-  return wrap<T | undefined>(
-    db.transaction("settings").objectStore("settings").get(key),
-  );
+  return wrap<T | undefined>(db.transaction("settings").objectStore("settings").get(key));
 }
 
-export async function putMeta(key: string, value: unknown): Promise<void> {
+export async function putMetaRaw(key: string, value: unknown): Promise<void> {
   const db = await open();
-  await wrap(
-    db.transaction("settings", "readwrite").objectStore("settings").put(value, key),
-  );
+  await wrap(db.transaction("settings", "readwrite").objectStore("settings").put(value, key));
 }
 
-async function allMeta(): Promise<Record<string, unknown>> {
+/** Le chiavi "sync:..." sono solo locali e non vengono mai inviate online. */
+export async function putMeta(key: string, value: unknown): Promise<void> {
+  await putMetaRaw(key, value);
+  if (!key.startsWith("sync:")) listener?.(`k:${key}`);
+}
+
+/** Tutti i valori generici tranne quelli di sincronizzazione (compresa la chiave "main" = impostazioni). */
+export async function allKv(): Promise<Record<string, unknown>> {
   const db = await open();
   return new Promise((resolve, reject) => {
     const out: Record<string, unknown> = {};
@@ -82,24 +78,30 @@ async function allMeta(): Promise<Record<string, unknown>> {
     req.onsuccess = () => {
       const cur = req.result;
       if (!cur) return resolve(out);
-      if (cur.key !== "main") out[String(cur.key)] = cur.value;
+      const k = String(cur.key);
+      if (!k.startsWith("sync:")) out[k] = cur.value;
       cur.continue();
     };
     req.onerror = () => reject(req.error);
   });
 }
 
+// ---- impostazioni
+export async function getSettings(): Promise<Settings> {
+  const saved = await getMeta<Settings>("main");
+  return { ...DEFAULT_SETTINGS, ...saved };
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  await putMeta("main", settings);
+}
+
+// ---- backup
 export async function exportBackup(): Promise<string> {
-  const [entries, settings, meta] = await Promise.all([
-    getAllEntries(),
-    getSettings(),
-    allMeta(),
-  ]);
-  return JSON.stringify(
-    { app: "app-perdita-peso", version: 2, settings, entries, meta },
-    null,
-    2,
-  );
+  const [entries, settings, kv] = await Promise.all([getAllEntries(), getSettings(), allKv()]);
+  const meta = { ...kv };
+  delete meta.main;
+  return JSON.stringify({ app: "app-perdita-peso", version: 2, settings, entries, meta }, null, 2);
 }
 
 export async function importBackup(json: string): Promise<number> {
@@ -112,7 +114,9 @@ export async function importBackup(json: string): Promise<number> {
   }
   if (data.settings) await saveSettings({ ...DEFAULT_SETTINGS, ...data.settings });
   if (data.meta && typeof data.meta === "object") {
-    for (const [k, v] of Object.entries(data.meta)) await putMeta(k, v);
+    for (const [k, v] of Object.entries(data.meta)) {
+      if (!k.startsWith("sync:") && k !== "main") await putMeta(k, v);
+    }
   }
   return data.entries.length;
 }
