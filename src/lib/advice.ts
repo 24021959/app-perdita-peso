@@ -1,4 +1,5 @@
 import { addDays, diffDays } from "./dates";
+import { STEPS_TARGET, fmtSteps, nextStepGoal, stepBenefit } from "./steps";
 import { avgAt, fastingStreak, lastDays } from "./metrics";
 import type { Entry, Exam, Med, Settings } from "./types";
 
@@ -222,8 +223,12 @@ export function buildAdvice(
     const steps = lastDays(entries, today, 7).filter((e) => e.steps !== undefined);
     if (steps.length >= 3) {
       const avg = steps.reduce((s, e) => s + (e.steps as number), 0) / steps.length;
-      if (avg < 4000) {
-        add("info", "Più movimento", `Media di ${Math.round(avg)} passi al giorno. Una camminata di 30 minuti ogni giorno aiuta peso e pressione.`);
+      if (avg < STEPS_TARGET) {
+        add(
+          "info",
+          "Più movimento",
+          `Media di ${fmtSteps(avg)} passi al giorno: circa il ${stepBenefit(avg)}% del beneficio degli studi. L'obiettivo consigliato è ${fmtSteps(STEPS_TARGET)}; il prossimo traguardo è ${fmtSteps(nextStepGoal(avg))}. Una camminata di 30 minuti ogni giorno aiuta peso e pressione.`,
+        );
       }
     }
   }

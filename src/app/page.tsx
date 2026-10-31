@@ -1,5 +1,7 @@
 "use client";
 
+import StepsCard from "@/components/StepsCard";
+import { avgSteps } from "@/lib/steps";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -298,6 +300,7 @@ function Oggi() {
           key={`${today}:${rev}`}
           today={today}
           initial={entries.find((e) => e.date === today)}
+          stepsAvg7={avgSteps(entries, today, 7)}
           onSave={upsert}
         />
       ) : (
@@ -312,10 +315,12 @@ const str = (v?: number) => (v === undefined ? "" : String(v));
 function TodayForm({
   today,
   initial,
+  stepsAvg7,
   onSave,
 }: {
   today: string;
   initial?: Entry;
+  stepsAvg7?: number;
   onSave: (e: Entry) => Promise<void>;
 }) {
   const [draft, setDraft] = useState<Record<string, string>>({
@@ -412,6 +417,7 @@ function TodayForm({
         <Field label="Sonno" unit="ore" value={draft.sleep} onChange={set("sleep")} />
         <Field label="Passi" value={draft.steps} onChange={set("steps")} />
       </Group>
+      <StepsCard today={num(draft.steps)} avg7={stepsAvg7} />
       <Group tone={TONES[3]} title="Controlli">
         <Field label="Glicemia" unit="mg/dl" value={draft.glucose} onChange={set("glucose")} />
         <Field label="Pressione max" value={draft.systolic} onChange={set("systolic")} />

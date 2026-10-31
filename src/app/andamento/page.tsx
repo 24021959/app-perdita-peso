@@ -6,6 +6,8 @@ import LineCard from "@/components/Charts";
 import CompareCard from "@/components/CompareCard";
 import MilestonesCard from "@/components/MilestonesCard";
 import PageBanner from "@/components/PageBanner";
+import StepsCard from "@/components/StepsCard";
+import { avgSteps } from "@/lib/steps";
 import { TONES, type Tone } from "@/lib/sections";
 import { useData } from "@/lib/useData";
 import { addDays, diffDays, longDate, shortDate, todayKey, weekStart } from "@/lib/dates";
@@ -136,6 +138,8 @@ export default function AndamentoPage() {
         data={waistRows}
         series={[{ key: "Vita", label: "Vita", color: "#e0803f", dots: true }]}
       />
+
+      <StepsCard avg7={avgSteps(entries, today, 7)} avg30={avgSteps(entries, today, 30)} />
 
       <MilestonesCard entries={entries} settings={settings} today={today} />
 

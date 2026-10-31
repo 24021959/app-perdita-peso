@@ -7,6 +7,7 @@ import { addDays, longDate, shortDate, todayKey, weekStart } from "@/lib/dates";
 import { avgAt, bmi, lastDays } from "@/lib/metrics";
 import { useData } from "@/lib/useData";
 import { useMeta } from "@/lib/useMeta";
+import { STEPS_TARGET, fmtSteps, stepBenefit } from "@/lib/steps";
 import type { Exam, Med } from "@/lib/types";
 
 const avg = (v: number[]) => (v.length ? v.reduce((a, b) => a + b, 0) / v.length : undefined);
@@ -166,7 +167,7 @@ export default function ReportPage() {
         <Row k="Giorni fuori regola" v={String(data.offDays)} />
         <Row k="Sonno medio" v={data.sleep === undefined ? "—" : `${f1(data.sleep)} ore`} />
         <Row k="Acqua media" v={data.water === undefined ? "—" : `${f1(data.water)} litri`} />
-        <Row k="Passi medi" v={data.steps === undefined ? "—" : String(Math.round(data.steps))} />
+        <Row k="Passi medi" v={data.steps === undefined ? "—" : `${fmtSteps(data.steps)} (${stepBenefit(data.steps)}% del beneficio a ${fmtSteps(STEPS_TARGET)} passi)`} />
       </Block>
 
       <Block title="Ultimi esami del sangue">
