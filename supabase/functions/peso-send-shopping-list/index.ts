@@ -1,4 +1,4 @@
-// Invia per email la lista della spesa dell'app "Equilibrio" usando Resend.
+// Invia per email la lista della spesa dell'app "Vivo" usando Resend.
 // Solo il proprietario dei dati (peso_is_owner) può usarla: non è un servizio aperto.
 // Segreto richiesto: RESEND_API_KEY (si imposta in Supabase → Edge Functions → Secrets).
 // Il mittente è la costante FROM: finché un dominio non è verificato in Resend si può usare
@@ -8,7 +8,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const ALLOWED_ORIGINS = ["https://24021959.github.io", "http://localhost:3000"];
-const FROM = "Equilibrio <onboarding@resend.dev>";
+const FROM = "Vivo <onboarding@resend.dev>";
 const MAX_TEXT = 8000;
 
 function corsHeaders(origin: string | null): Record<string, string> {

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Logo from "./Logo";
 import { APP_NAME, OWNER_EMAIL } from "@/lib/config";
 import { setPassword } from "@/lib/sync";
 
@@ -28,11 +29,9 @@ export default function SetPasswordScreen({ onSkip }: { onSkip: () => void }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-5 py-10">
       <div className="mb-8 text-center text-accent">
-        <svg width="56" height="56" viewBox="0 0 26 26" aria-hidden="true" className="mx-auto">
-          <circle cx="13" cy="13" r="11" fill="none" stroke="currentColor" strokeWidth="2.2" />
-          <path d="M13 13 L18 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="13" cy="13" r="1.8" fill="currentColor" />
-        </svg>
+        <span className="mx-auto block w-fit">
+          <Logo size={72} />
+        </span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">{APP_NAME}</h1>
         <p className="mt-1 text-muted">Scegli la tua password</p>
       </div>

@@ -14,7 +14,13 @@ export const metadata: Metadata = {
   title: APP_NAME,
   description: "Diario personale: peso, digiuno 16:8 e menu",
   manifest: `${base}/manifest.webmanifest`,
-  icons: { icon: `${base}/icon-192.png`, apple: `${base}/icon-192.png` },
+  icons: {
+    icon: [
+      { url: `${base}/icon.svg`, type: "image/svg+xml" },
+      { url: `${base}/icon-192.png`, sizes: "192x192", type: "image/png" },
+    ],
+    apple: `${base}/icon-192.png`,
+  },
   appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },
 };
 

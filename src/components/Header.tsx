@@ -7,6 +7,7 @@ import { APP_NAME } from "@/lib/config";
 import { SECTIONS, type Section } from "@/lib/sections";
 import { signOut } from "@/lib/sync";
 import { useSyncStatus } from "@/lib/useSync";
+import Logo from "./Logo";
 import SyncBadge from "./SyncBadge";
 
 const items: { href: string; section: Section }[] = [
@@ -41,11 +42,7 @@ export default function Header() {
     <header className="sticky top-0 z-30 border-b border-line bg-card print:hidden">
       <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-accent">
-          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-            <circle cx="13" cy="13" r="11" fill="none" stroke="currentColor" strokeWidth="2.4" />
-            <path d="M13 13 L18 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-            <circle cx="13" cy="13" r="1.8" fill="currentColor" />
-          </svg>
+          <Logo size={32} />
           {APP_NAME}
         </Link>
 
