@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { APP_NAME, OWNER_EMAIL } from "@/lib/config";
+import { OWNER_EMAIL } from "@/lib/config";
+import { WELCOME_SEEN_KEY } from "@/lib/greeting";
 import { signInWithEmail, signInWithPassword } from "@/lib/sync";
 import { useSyncStatus } from "@/lib/useSync";
+import Entrata from "./Entrata";
 
 /** Pagina di accesso: appare all'apertura se non si è collegati e dopo "Esci". */
 export default function LoginScreen() {
@@ -18,7 +20,14 @@ export default function LoginScreen() {
     const err = await signInWithPassword(password);
     setBusy(false);
     if (err) setMsg(err);
-    else setPassword("");
+    else {
+      setPassword("");
+      try {
+        sessionStorage.setItem(WELCOME_SEEN_KEY, "1"); // il benvenuto l'hai già visto qui
+      } catch {
+        /* ignora */
+      }
+    }
   }
 
   async function sendLink() {
@@ -30,17 +39,8 @@ export default function LoginScreen() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-5 py-10">
-      <div className="mb-8 text-center text-accent">
-        <svg width="56" height="56" viewBox="0 0 26 26" aria-hidden="true" className="mx-auto">
-          <circle cx="13" cy="13" r="11" fill="none" stroke="currentColor" strokeWidth="2.2" />
-          <path d="M13 13 L18 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="13" cy="13" r="1.8" fill="currentColor" />
-        </svg>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">{APP_NAME}</h1>
-        <p className="mt-1 text-muted">Inserisci la password per entrare</p>
-      </div>
-
+    <Entrata>
+      <p className="mb-4 text-center text-muted">Inserisci la password per entrare</p>
       {s.linkSent ? (
         <div className="space-y-3 rounded-2xl bg-peach p-4 text-peach-ink">
           <p>
@@ -87,6 +87,6 @@ export default function LoginScreen() {
         </form>
       )}
       {s.linkSent && msg && <p className="mt-3 text-sm text-rose-ink">{msg}</p>}
-    </main>
+    </Entrata>
   );
 }

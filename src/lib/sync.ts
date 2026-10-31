@@ -22,6 +22,8 @@ export type SyncStatus = {
   ready?: boolean;
   /** vero se l'account ha già una password scelta (altrimenti dopo il link via email si propone di sceglierla) */
   hasPassword?: boolean;
+  /** vero quando la sessione è stata confermata dal server (o, senza internet, la sessione salvata non è scaduta) */
+  verified?: boolean;
 };
 
 let status: SyncStatus = { phase: "off", pending: 0 };
@@ -47,6 +49,7 @@ function client(): SupabaseClient {
 }
 
 let session: Session | null = null;
+let verifiedUserId: string | null = null; // utente già confermato in questa apertura: evita di riverificare a ogni rinnovo
 let passwordLogin = false; // l'ultimo accesso è avvenuto con la password: quindi la password esiste
 let started = false;
 let running = false;
@@ -227,13 +230,62 @@ export async function syncNow(): Promise<void> {
   }
 }
 
+/**
+ * Conferma che la sessione salvata sia ancora valida prima di mostrare l'app.
+ * Con il server raggiungibile si chiede conferma; senza internet ci si fida della sessione solo se non è scaduta.
+ */
+async function verifySession(s: Session): Promise<boolean> {
+  const stillValid = (s.expires_at ?? 0) * 1000 > Date.now();
+  if (typeof navigator !== "undefined" && !navigator.onLine) return stillValid;
+  try {
+    const res = await Promise.race([
+      client().auth.getUser(),
+      new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 6000)),
+    ]);
+    if (res === "timeout") return stillValid;
+    const err = res.error;
+    if (!err) return true;
+    const status = (err as { status?: number }).status;
+    if (status === 401 || status === 403 || status === 404) {
+      verifiedUserId = null;
+      await client().auth.signOut({ scope: "local" });
+      return false;
+    }
+    return stillValid; // errore di rete: vale la regola della sessione non scaduta
+  } catch {
+    return stillValid;
+  }
+}
+
 async function onSession(s: Session | null) {
   session = s;
   if (!s) {
-    setStatus({ phase: "out", ready: true, email: undefined, error: undefined, pending: (await readDirty()).length });
+    verifiedUserId = null;
+    passwordLogin = false;
+    setStatus({ phase: "out", ready: true, verified: false, email: undefined, error: undefined, pending: (await readDirty()).length });
     return;
   }
-  setStatus({ phase: "idle", ready: true, hasPassword: s.user.user_metadata?.has_password === true || passwordLogin, email: s.user.email ?? undefined, linkSent: false, pending: (await readDirty()).length });
+  const known = verifiedUserId === s.user.id;
+  setStatus({
+    phase: "idle",
+    ready: true,
+    verified: known,
+    hasPassword: s.user.user_metadata?.has_password === true || passwordLogin,
+    email: s.user.email ?? undefined,
+    linkSent: false,
+    pending: (await readDirty()).length,
+  });
+  if (!known) {
+    const ok = await verifySession(s);
+    if (session?.user.id !== s.user.id) return; // nel frattempo si è cambiato account o si è usciti
+    if (ok) {
+      verifiedUserId = s.user.id;
+      setStatus({ verified: true });
+    } else {
+      setStatus({ verified: false });
+      return;
+    }
+  }
   schedule(0);
 }
 
@@ -267,8 +319,9 @@ export async function signInWithEmail(email: string): Promise<string | null> {
 /** Accesso con la sola password: l'email del proprietario è fissa. */
 export async function signInWithPassword(password: string): Promise<string | null> {
   passwordLogin = true;
-  const { error } = await client().auth.signInWithPassword({ email: OWNER_EMAIL, password });
+  const { data, error } = await client().auth.signInWithPassword({ email: OWNER_EMAIL, password });
   if (!error) {
+    if (data.session) verifiedUserId = data.session.user.id; // appena confermata dal server
     // segna sull'account che la password esiste, così il link via email non la richiede di nuovo
     setTimeout(() => void client().auth.updateUser({ data: { has_password: true } }), 0);
     return null;

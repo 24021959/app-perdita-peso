@@ -2,16 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { APP_NAME } from "@/lib/config";
+import { greeting, WELCOME_SEEN_KEY } from "@/lib/greeting";
 import { useData } from "@/lib/useData";
-
-const KEY = "benvenuto-visto";
-
-function greeting(now = new Date()) {
-  const h = now.getHours();
-  if (h >= 5 && h < 13) return "Buongiorno";
-  if (h >= 13 && h < 18) return "Buon pomeriggio";
-  return "Buonasera";
-}
 
 /** Schermata di benvenuto con il saluto per nome, una volta a ogni apertura dell'app. */
 export default function Benvenuto() {
@@ -22,8 +14,8 @@ export default function Benvenuto() {
   useEffect(() => {
     if (!ready) return;
     try {
-      if (sessionStorage.getItem(KEY)) return;
-      sessionStorage.setItem(KEY, "1");
+      if (sessionStorage.getItem(WELCOME_SEEN_KEY)) return;
+      sessionStorage.setItem(WELCOME_SEEN_KEY, "1");
     } catch {
       /* senza storage il benvenuto compare a ogni caricamento: va bene */
     }
