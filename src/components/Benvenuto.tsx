@@ -42,7 +42,7 @@ export default function Benvenuto() {
       role="dialog"
       aria-label="Benvenuto"
       onClick={() => setShown(false)}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 px-6 text-center print:hidden"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background px-6 text-center print:hidden"
     >
       <div className="max-w-sm">
         <p className="text-sm font-medium uppercase tracking-wide text-accent">{APP_NAME}</p>

@@ -18,6 +18,8 @@ export type SyncStatus = {
   error?: string;
   pending: number;
   linkSent?: boolean;
+  /** vero quando Supabase ha letto la sessione salvata (serve a non mostrare la pagina di accesso per sbaglio) */
+  ready?: boolean;
 };
 
 let status: SyncStatus = { phase: "off", pending: 0 };
@@ -225,10 +227,10 @@ export async function syncNow(): Promise<void> {
 async function onSession(s: Session | null) {
   session = s;
   if (!s) {
-    setStatus({ phase: "out", email: undefined, error: undefined, pending: (await readDirty()).length });
+    setStatus({ phase: "out", ready: true, email: undefined, error: undefined, pending: (await readDirty()).length });
     return;
   }
-  setStatus({ phase: "idle", email: s.user.email ?? undefined, linkSent: false, pending: (await readDirty()).length });
+  setStatus({ phase: "idle", ready: true, email: s.user.email ?? undefined, linkSent: false, pending: (await readDirty()).length });
   schedule(0);
 }
 

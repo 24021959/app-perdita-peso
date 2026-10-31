@@ -15,6 +15,9 @@ Documenti di riferimento nel Progetto chat "App perdita peso": `scheda-progetto.
 - Next.js 16 con `output: "export"` (sito statico), TypeScript, Tailwind 4, Recharts per i grafici.
 - **Prima di scrivere codice Next.js leggere le guide in `node_modules/next/dist/docs/`** (questa versione ha differenze rispetto a quella che si conosce; vedi AGENTS.md).
 - Nessun server nostro. I dati stanno prima nel dispositivo (IndexedDB, database `app-perdita-peso`) e sono copiati su Supabase se si accede (vedi Sincronizzazione). Perciò: niente route dinamiche, niente API, niente cookie.
+- Accesso: `src/components/Gate.tsx` (in `layout.tsx`) mostra l'app solo a chi è collegato, altrimenti `LoginScreen.tsx` (password; ripiego: link via email). "Esci" in `Header` fa `signOut()` e riporta alla pagina di accesso. Senza internet, se in `localStorage` c'è già la sessione (`sb-…-auth-token`), l'app si apre comunque. `SyncStatus.ready` dice che la sessione salvata è stata letta (evita il lampo della pagina di accesso). L'accesso è solo un blocco dell'interfaccia: i dati restano nel dispositivo (IndexedDB).
+- Accesso con password: `signInWithPassword`/`setPassword` in `sync.ts`, email fissa `OWNER_EMAIL` in `config.ts`. La password si sceglie da collegati in Impostazioni → Salvataggio online (primo accesso con il link via email).
+- Benvenuto con saluto per nome (`Benvenuto.tsx`, nome in `Settings.name`, predefinito "Antonello"), farmaci (`MedsPanel.tsx`, chiave `meds`; entrano in report e consigli, con regole per l'anticoagulante in `advice.ts`).
 - `next.config.ts` mantiene la regola turbopack per `@tailwindcss/turbopack`: non rimuoverla.
 - `basePath` e `trailingSlash: true`: i link interni usano `next/link` e finiscono con `/` (es. `/andamento/`).
 - Il lint di React segnala `setState` dentro `useEffect`: caricare dati con funzione async dentro l'effetto, oppure passare i valori iniziali a un componente figlio (vedi `TodayForm`, `SettingsForm`).

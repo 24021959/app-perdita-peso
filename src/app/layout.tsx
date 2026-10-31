@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Benvenuto from "@/components/Benvenuto";
+import Gate from "@/components/Gate";
 import Header from "@/components/Header";
 import { APP_NAME } from "@/lib/config";
 import { PREFS_BOOT_SCRIPT } from "@/lib/prefs";
@@ -30,11 +31,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: PREFS_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <Benvenuto />
-        <Header />
-        <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-5 pb-12">
-          {children}
-        </main>
+        <Gate>
+          <Benvenuto />
+          <Header />
+          <main className="flex-1 w-full max-w-2xl mx-auto px-4 pt-5 pb-12">
+            {children}
+          </main>
+        </Gate>
         <RegisterSW />
         <SyncInit />
       </body>
