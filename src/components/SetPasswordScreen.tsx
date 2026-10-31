@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { APP_NAME, OWNER_EMAIL } from "@/lib/config";
 import { setPassword } from "@/lib/sync";
 
 /** Dopo il link via email: una pagina semplice per scegliere la password. */
 export default function SetPasswordScreen({ onSkip }: { onSkip: () => void }) {
+  const router = useRouter();
   const [one, setOne] = useState("");
   const [two, setTwo] = useState("");
   const [msg, setMsg] = useState("");
@@ -20,6 +22,7 @@ export default function SetPasswordScreen({ onSkip }: { onSkip: () => void }) {
     const err = await setPassword(one);
     setBusy(false);
     if (err) setMsg(err);
+    else router.replace("/"); // si apre "Oggi"
   }
 
   return (
@@ -80,7 +83,13 @@ export default function SetPasswordScreen({ onSkip }: { onSkip: () => void }) {
         >
           {busy ? "Salvo…" : "Salva e entra"}
         </button>
-        <button type="button" onClick={onSkip} className="w-full text-center text-sm underline">
+        <button
+          type="button"
+          onClick={() => {
+            router.replace("/");
+            onSkip();
+          }}
+          className="w-full text-center text-sm underline">
           Più tardi
         </button>
       </form>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { OWNER_EMAIL } from "@/lib/config";
 import { WELCOME_SEEN_KEY } from "@/lib/greeting";
@@ -10,6 +11,7 @@ import Entrata from "./Entrata";
 /** Pagina di accesso: appare all'apertura se non si è collegati e dopo "Esci". */
 export default function LoginScreen() {
   const s = useSyncStatus();
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -22,6 +24,7 @@ export default function LoginScreen() {
     if (err) setMsg(err);
     else {
       setPassword("");
+      router.replace("/"); // dopo l'accesso si apre sempre "Oggi"
       try {
         sessionStorage.setItem(WELCOME_SEEN_KEY, "1"); // il benvenuto l'hai già visto qui
       } catch {
