@@ -20,6 +20,8 @@ export type SyncStatus = {
   linkSent?: boolean;
   /** vero quando Supabase ha letto la sessione salvata (serve a non mostrare la pagina di accesso per sbaglio) */
   ready?: boolean;
+  /** vero se l'account ha già una password scelta (altrimenti dopo il link via email si propone di sceglierla) */
+  hasPassword?: boolean;
 };
 
 let status: SyncStatus = { phase: "off", pending: 0 };
@@ -45,6 +47,7 @@ function client(): SupabaseClient {
 }
 
 let session: Session | null = null;
+let passwordLogin = false; // l'ultimo accesso è avvenuto con la password: quindi la password esiste
 let started = false;
 let running = false;
 let rerun = false;
@@ -230,7 +233,7 @@ async function onSession(s: Session | null) {
     setStatus({ phase: "out", ready: true, email: undefined, error: undefined, pending: (await readDirty()).length });
     return;
   }
-  setStatus({ phase: "idle", ready: true, email: s.user.email ?? undefined, linkSent: false, pending: (await readDirty()).length });
+  setStatus({ phase: "idle", ready: true, hasPassword: s.user.user_metadata?.has_password === true || passwordLogin, email: s.user.email ?? undefined, linkSent: false, pending: (await readDirty()).length });
   schedule(0);
 }
 
@@ -263,8 +266,14 @@ export async function signInWithEmail(email: string): Promise<string | null> {
 
 /** Accesso con la sola password: l'email del proprietario è fissa. */
 export async function signInWithPassword(password: string): Promise<string | null> {
+  passwordLogin = true;
   const { error } = await client().auth.signInWithPassword({ email: OWNER_EMAIL, password });
-  if (!error) return null;
+  if (!error) {
+    // segna sull'account che la password esiste, così il link via email non la richiede di nuovo
+    setTimeout(() => void client().auth.updateUser({ data: { has_password: true } }), 0);
+    return null;
+  }
+  passwordLogin = false;
   if (/invalid login credentials/i.test(error.message)) {
     return "Password non corretta. Se non l'hai ancora scelta, entra una volta con il link via email e impostala da qui.";
   }
@@ -273,8 +282,11 @@ export async function signInWithPassword(password: string): Promise<string | nul
 
 /** Sceglie o cambia la password dell'account (serve essere già collegati). */
 export async function setPassword(password: string): Promise<string | null> {
-  const { error } = await client().auth.updateUser({ password });
-  return error ? friendly(error) : null;
+  const { error } = await client().auth.updateUser({ password, data: { has_password: true } });
+  if (error) return friendly(error);
+  passwordLogin = true;
+  setStatus({ hasPassword: true });
+  return null;
 }
 
 export async function signOut() {
