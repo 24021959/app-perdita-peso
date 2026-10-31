@@ -18,7 +18,7 @@ import {
   lunchOf,
   swapMeal,
 } from "@/lib/menu";
-import { CARB_LIMIT, PROTEIN_TARGET, dayTotals } from "@/lib/recipes";
+import { CARB_LIMIT, KCAL_TARGET, PROTEIN_TARGET, dayTotals } from "@/lib/recipes";
 import type { MenuPlan } from "@/lib/types";
 
 export default function MenuPage() {
@@ -171,13 +171,16 @@ function WeekMenu({
       <ShoppingList plan={plan} checked={checked} onToggle={toggleChecked} />
 
       <p className="text-xs text-muted">
-        Porzioni indicative: 150-180 g di carne o pesce a pranzo, verdura libera, olio 1-2 cucchiai. Vedi il
-        documento &quot;menu base&quot; nel Progetto per i dettagli.
+        Porzioni indicative: 220-250 g di carne o pesce a pranzo, verdura libera, olio 4-6 cucchiaini (circa 2
+        cucchiai), avocado e frutta secca. Vedi il documento &quot;menu base&quot; nel Progetto per i dettagli.
       </p>
-      <p className="rounded-2xl bg-butter text-butter-ink p-4 text-sm">
-        I menu base valgono circa 500-800 kcal al giorno, con 50-70 g di proteine. Per un uomo di 67 anni è
-        poco: fallo vedere al medico e, se ti dice di aumentare, porta le porzioni di proteine e di grassi buoni
-        all&apos;obiettivo indicato qui sopra.
+      <p className="rounded-2xl bg-mint text-mint-ink p-4 text-sm">
+        I menu valgono circa {KCAL_TARGET.toLocaleString("it-IT", { useGrouping: "always" })} kcal al giorno (colazione 650-700, pranzo 980-1.050),
+        con circa 100 g di proteine e meno di 30 g di carboidrati netti. È una stima per un uomo di 67 anni di 95 kg
+        con poca attività: il fabbisogno è di circa 2.200 kcal, quindi la differenza porta a perdere circa mezzo
+        chilo a settimana. Se hai fame, o perdi più di 1 kg a settimana, aggiungi un cucchiaio d&apos;olio o una
+        manciata di noci. Fai confermare le quantità dal medico: i grassi sono soprattutto olio, pesce, avocado e
+        frutta secca, ma conviene controllare colesterolo e trigliceridi con gli esami.
       </p>
     </div>
   );
