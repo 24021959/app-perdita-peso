@@ -7,7 +7,7 @@ import { todayKey } from "@/lib/dates";
 import PageBanner from "@/components/PageBanner";
 import { useData } from "@/lib/useData";
 import { useMeta } from "@/lib/useMeta";
-import type { Exam } from "@/lib/types";
+import type { Exam, Med } from "@/lib/types";
 
 const style: Record<Level, { box: string; tag: string }> = {
   warning: { box: "border-rose-ink/30 bg-rose text-rose-ink", tag: "Avviso" },
@@ -18,9 +18,10 @@ const style: Record<Level, { box: string; tag: string }> = {
 export default function ConsigliPage() {
   const { entries, settings, ready } = useData();
   const [exams] = useMeta<Exam[]>("exams", []);
+  const [meds] = useMeta<Med[]>("meds", []);
   const today = todayKey();
 
-  const advice = useMemo(() => buildAdvice(entries, settings, exams, today), [entries, settings, exams, today]);
+  const advice = useMemo(() => buildAdvice(entries, settings, exams, today, meds), [entries, settings, exams, today, meds]);
   const summary = summaryLine(entries, settings);
 
   if (!ready) return <p className="text-muted">Carico…</p>;

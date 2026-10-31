@@ -18,7 +18,7 @@ import SyncBadge from "@/components/SyncBadge";
 import { useHintDismissed } from "@/lib/hints";
 import { useSyncStatus } from "@/lib/useSync";
 import { parseVoice } from "@/lib/voice";
-import type { Entry, Exam, MenuPlan } from "@/lib/types";
+import type { Entry, Exam, Med, MenuPlan } from "@/lib/types";
 
 const num = (v = ""): number | undefined => {
   const n = parseFloat(v.replace(",", "."));
@@ -110,6 +110,7 @@ function Oggi() {
   const isToday = today === realToday;
   const [now, setNow] = useState<Date | null>(null);
   const [exams] = useMeta<Exam[]>("exams", []);
+  const [meds] = useMeta<Med[]>("meds", []);
   const sync = useSyncStatus();
   const [syncHintGone, dismissSyncHint] = useHintDismissed("sync");
   const ws = weekStart(realToday);
@@ -117,8 +118,8 @@ function Oggi() {
   const [dislikes] = useMeta<string[]>("dislikes", []);
   const dayMenu = (plan ?? baseWeek(ws, dislikes)).days[(new Date().getDay() + 6) % 7];
   const alerts = useMemo(
-    () => buildAdvice(entries, settings, exams, realToday).filter((a) => a.level !== "info").slice(0, 2),
-    [entries, settings, exams, realToday],
+    () => buildAdvice(entries, settings, exams, realToday, meds).filter((a) => a.level !== "info").slice(0, 2),
+    [entries, settings, exams, realToday, meds],
   );
 
   const fresh = useMemo(

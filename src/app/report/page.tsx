@@ -7,7 +7,7 @@ import { addDays, longDate, shortDate, todayKey, weekStart } from "@/lib/dates";
 import { avgAt, bmi, lastDays } from "@/lib/metrics";
 import { useData } from "@/lib/useData";
 import { useMeta } from "@/lib/useMeta";
-import type { Exam } from "@/lib/types";
+import type { Exam, Med } from "@/lib/types";
 
 const avg = (v: number[]) => (v.length ? v.reduce((a, b) => a + b, 0) / v.length : undefined);
 const f1 = (n?: number, d = 1) => (n === undefined ? "—" : n.toFixed(d).replace(".", ","));
@@ -15,6 +15,7 @@ const f1 = (n?: number, d = 1) => (n === undefined ? "—" : n.toFixed(d).replac
 export default function ReportPage() {
   const { entries, settings, ready } = useData();
   const [exams] = useMeta<Exam[]>("exams", []);
+  const [meds] = useMeta<Med[]>("meds", []);
   const [days, setDays] = useState(30);
   const today = todayKey();
 
@@ -116,6 +117,14 @@ export default function ReportPage() {
               : `${f1(data.waistFirst)} → ${f1(data.waistLast)} cm`
           }
         />
+      </Block>
+
+      <Block title="Terapia in corso">
+        {meds.length === 0 ? (
+          <p className="text-muted">Nessun farmaco registrato.</p>
+        ) : (
+          meds.map((m) => <Row key={m.id} k={m.name} v={m.dose ?? "—"} />)
+        )}
       </Block>
 
       <Block title="Peso, media per settimana">

@@ -1,5 +1,5 @@
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
-import { SUPABASE_KEY, SUPABASE_URL } from "./config";
+import { OWNER_EMAIL, SUPABASE_KEY, SUPABASE_URL } from "./config";
 import {
   allKv,
   getAllEntries,
@@ -257,6 +257,22 @@ export async function signInWithEmail(email: string): Promise<string | null> {
   if (error) return friendly(error);
   setStatus({ linkSent: true });
   return null;
+}
+
+/** Accesso con la sola password: l'email del proprietario è fissa. */
+export async function signInWithPassword(password: string): Promise<string | null> {
+  const { error } = await client().auth.signInWithPassword({ email: OWNER_EMAIL, password });
+  if (!error) return null;
+  if (/invalid login credentials/i.test(error.message)) {
+    return "Password non corretta. Se non l'hai ancora scelta, entra una volta con il link via email e impostala da qui.";
+  }
+  return friendly(error);
+}
+
+/** Sceglie o cambia la password dell'account (serve essere già collegati). */
+export async function setPassword(password: string): Promise<string | null> {
+  const { error } = await client().auth.updateUser({ password });
+  return error ? friendly(error) : null;
 }
 
 export async function signOut() {

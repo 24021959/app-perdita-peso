@@ -17,6 +17,7 @@ export type Entry = {
 };
 
 export type Settings = {
+  name?: string; // nome per il saluto di benvenuto
   heightCm: number;
   startWeight: number;
   goalMin: number;
@@ -26,6 +27,7 @@ export type Settings = {
 };
 
 export const DEFAULT_SETTINGS: Settings = {
+  name: "Antonello",
   heightCm: 175,
   startWeight: 95,
   goalMin: 85,
@@ -59,3 +61,5 @@ export type MenuPlan = {
   weekStart: string;
   days: { breakfast: string; lunch: string }[]; // 7 giorni, lunedì = 0
 };
+
+export type Med = { id: string; name: string; dose?: string };

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import AppearancePanel from "@/components/AppearancePanel";
 import PageBanner from "@/components/PageBanner";
+import MedsPanel from "@/components/MedsPanel";
 import SyncPanel from "@/components/SyncPanel";
 import { useData } from "@/lib/useData";
 import { exportBackup, importBackup } from "@/lib/db";
@@ -77,6 +78,16 @@ function SettingsForm({
       <PageBanner section="impostazioni" title="Impostazioni" />
 
       <section className="rounded-2xl bg-sky text-sky-ink p-4 space-y-3">
+        <label className="block">
+          <span className="text-sm opacity-80">Il tuo nome (per il saluto)</span>
+          <input
+            type="text"
+            autoComplete="given-name"
+            value={form.name ?? ""}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="mt-1 w-full rounded-xl border border-line bg-card px-3 py-3 text-lg text-foreground"
+          />
+        </label>
         {numField("heightCm", "Altezza (cm)")}
         {numField("startWeight", "Peso di partenza (kg)")}
         {numField("goalMin", "Obiettivo minimo (kg)")}
@@ -110,6 +121,8 @@ function SettingsForm({
           Salva
         </button>
       </section>
+
+      <MedsPanel />
 
       <AppearancePanel />
 

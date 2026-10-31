@@ -1,6 +1,6 @@
 import { addDays, diffDays } from "./dates";
 import { avgAt, fastingStreak, lastDays } from "./metrics";
-import type { Entry, Exam, Settings } from "./types";
+import type { Entry, Exam, Med, Settings } from "./types";
 
 export type Level = "warning" | "attention" | "info";
 export type Advice = { level: Level; title: string; text: string };
@@ -17,6 +17,7 @@ export function buildAdvice(
   settings: Settings,
   exams: Exam[],
   today: string,
+  meds: Med[] = [],
 ): Advice[] {
   const out: Advice[] = [];
   const add = (level: Level, title: string, text: string) => out.push({ level, title, text });
@@ -191,6 +192,28 @@ export function buildAdvice(
       "attention",
       "Esami da ripetere",
       "Sono passati più di 3 mesi dall'ultimo controllo del sangue. Prenotalo e registra i valori in Salute.",
+    );
+  }
+
+  // ---- Reni e terapia anticoagulante (es. Xarelto): la dose dipende dalla funzione dei reni
+  const anticoag = meds.some((m) => /xarelto|rivaroxaban|eliquis|apixaban|lixiana|edoxaban|pradaxa|dabigatran|warfarin|coumadin/i.test(m.name));
+  const creat = lastExam?.creat;
+  if (creat !== undefined && creat > 1.2) {
+    add(
+      anticoag ? "warning" : "attention",
+      "Creatinina sopra il limite",
+      `Ultimo valore: ${fmt(creat, 2)} mg/dl (limite indicativo 1,2). ${
+        anticoag
+          ? "Con l'anticoagulante la dose dipende dalla funzione dei reni: mostra l'esame al medico e bevi regolarmente."
+          : "Bevi regolarmente e mostra l'esame al medico."
+      }`,
+    );
+  }
+  if (anticoag) {
+    add(
+      "info",
+      "Terapia anticoagulante",
+      "Se noti sanguinamenti insoliti (gengive, naso, urine rosate, feci scure) o lividi senza motivo, avvisa subito il medico. Non saltare e non cambiare le dosi da solo. Col digiuno bevi con regolarità: i liquidi proteggono i reni.",
     );
   }
 

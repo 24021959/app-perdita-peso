@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { APP_NAME } from "@/lib/config";
 import { SECTIONS, type Section } from "@/lib/sections";
+import { signOut } from "@/lib/sync";
+import { useSyncStatus } from "@/lib/useSync";
 import SyncBadge from "./SyncBadge";
 
 const items: { href: string; section: Section }[] = [
@@ -24,6 +26,8 @@ export default function Header() {
   // il menu si chiude da solo quando si cambia pagina: ricorda per quale pagina è stato aperto
   const [openFor, setOpenFor] = useState<string | null>(null);
   const open = openFor === path;
+  const sync = useSyncStatus();
+  const loggedIn = sync.phase === "idle" || sync.phase === "syncing" || sync.phase === "error";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -63,10 +67,26 @@ export default function Header() {
           </ul>
         </nav>
 
+        <div className="flex items-center gap-1">
+        {loggedIn && (
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="flex h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-muted hover:text-foreground"
+            aria-label="Esci dall'account"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
+            Esci
+          </button>
+        )}
         {/* telefono: panino */}
         <button
           type="button"
-          className="md:hidden -mr-2 flex h-11 w-11 items-center justify-center rounded-lg"
+          className="md:hidden flex h-11 w-11 items-center justify-center rounded-lg"
           aria-label={open ? "Chiudi il menu" : "Apri il menu"}
           aria-expanded={open}
           aria-controls="menu-mobile"
@@ -90,6 +110,7 @@ export default function Header() {
             />
           </span>
         </button>
+        </div>
       </div>
 
       {open && (
